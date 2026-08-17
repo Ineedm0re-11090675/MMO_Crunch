@@ -1,0 +1,19 @@
+# Codex: Unreal generated/cache files should not be uploaded to Git.
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Codex: IDE/generated project files can be regenerated locally.
+.vs/
+.vscode/
+.idea/
+*.sln
+*.xcworkspace/
+*.xcodeproj/
+
+# Codex: macOS and editor noise.
+.DS_Store
+*.swp
+*.swo
+
