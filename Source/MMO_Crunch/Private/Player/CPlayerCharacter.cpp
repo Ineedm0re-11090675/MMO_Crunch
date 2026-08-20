@@ -5,6 +5,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "AbilitySystemComponent.h"
 ACPlayerCharacter::ACPlayerCharacter()
 {
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>("Camera Spring");
@@ -45,6 +46,34 @@ void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(JumpAction,ETriggerEvent::Triggered, this,&ACPlayerCharacter::Jump);
 		EnhancedInputComponent->BindAction(LookAction,ETriggerEvent::Triggered,this,&ACPlayerCharacter::HandleLook);
 		EnhancedInputComponent->BindAction(MoveAction,ETriggerEvent::Triggered,this,&ACPlayerCharacter::HandleMove);
+
+		// Codex: Lesson 35 - Bind every configured ability action with its enum
+		// value so the ASC receives the same InputID used by GiveAbility.
+		for (const TPair<ECAbilityInputID, UInputAction*>& InputActionPair : GameplayAbilityInputActions)
+		{
+			if (InputActionPair.Value)
+			{
+				EnhancedInputComponent->BindAction(InputActionPair.Value, ETriggerEvent::Triggered, this, &ACPlayerCharacter::HandleAbilityInput, InputActionPair.Key);
+			}
+		}
+	}
+}
+
+void ACPlayerCharacter::HandleAbilityInput(const FInputActionValue& InputActionValue, ECAbilityInputID InputID)
+{
+	if (!GetAbilitySystemComponent())
+	{
+		return;
+	}
+
+	const bool bPressed = InputActionValue.Get<bool>();
+	if (bPressed)
+	{
+		GetAbilitySystemComponent()->AbilityLocalInputPressed(static_cast<int32>(InputID));
+	}
+	else
+	{
+		GetAbilitySystemComponent()->AbilityLocalInputReleased(static_cast<int32>(InputID));
 	}
 }
 
@@ -79,4 +108,3 @@ FVector ACPlayerCharacter::GeLookForwardVector() const
 {
 	return CameraComp->GetForwardVector();
 }
-

@@ -1,7 +1,7 @@
 #include "CAbilitySystemComponent.h"
 
-#include "Conditions/MovieSceneScalabilityCondition.h"
-
+// Codex: Removed the unrelated MovieScene include; this implementation only
+// depends on the ability system component declaration above.
 void UCAbilitySystemComponent::ApplyInitialEffects()
 {
 	/*Explain ：为什么写在SystemComponent里也能影响到Attribute？
@@ -23,14 +23,26 @@ void UCAbilitySystemComponent::GiveInitialAbility()
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 	
-	for (const TSubclassOf<UGameplayAbility>& Ability : GameplayAbilities)
+	// Codex: Lessons 34-35 - Pass the enum value into the ability spec as its
+	// InputID, allowing AbilityLocalInputPressed/Released to activate it.
+	for (const TPair<ECAbilityInputID, TSubclassOf<UGameplayAbility>>& AbilityPair : GameplayAbilities)
 	{
-		GiveAbility(FGameplayAbilitySpec(Ability,0,-1,nullptr));
+		if (!AbilityPair.Value)
+		{
+			continue;
+		}
+
+		GiveAbility(FGameplayAbilitySpec(AbilityPair.Value, 0, static_cast<int32>(AbilityPair.Key), nullptr));
 	}
 	
-	for (const TSubclassOf<UGameplayAbility>& Ability : BasicGameplayAbilities)
+	for (const TPair<ECAbilityInputID, TSubclassOf<UGameplayAbility>>& AbilityPair : BasicGameplayAbilities)
 	{
-		//Level > 0  means you learn the Ability;
-		GiveAbility(FGameplayAbilitySpec(Ability,1,-1,nullptr));
+		if (!AbilityPair.Value)
+		{
+			continue;
+		}
+
+		// Level > 0 means the ability is learned.
+		GiveAbility(FGameplayAbilitySpec(AbilityPair.Value, 1, static_cast<int32>(AbilityPair.Key), nullptr));
 	}
 }

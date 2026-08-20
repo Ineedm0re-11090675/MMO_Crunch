@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
+#include "CGameplayAbilityTypes.h"
 #include "CAbilitySystemComponent.generated.h"
 
 UCLASS()
@@ -18,9 +19,13 @@ private:
 	/*
 	 *特殊技能，习得技能
 	 */
-	UPROPERTY(EditDefaultsOnly,Category = "Gameplay Effects")
-	TArray<TSubclassOf<UGameplayAbility>> GameplayAbilities;
+	// Codex: Lessons 34-35 - Store the input ID beside each ability class so
+	// GiveAbility can create specs that respond to Enhanced Input.
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Ability")
+	TMap<ECAbilityInputID, TSubclassOf<UGameplayAbility>> GameplayAbilities;
 
-	UPROPERTY(EditDefaultsOnly,Category = "Gameplay Effects")
-	TArray<TSubclassOf<UGameplayAbility>> BasicGameplayAbilities; 
+	// Codex: Lessons 34-35 - Basic abilities use the same input-ID path as
+	// learned abilities, while retaining their existing level distinction.
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Ability")
+	TMap<ECAbilityInputID, TSubclassOf<UGameplayAbility>> BasicGameplayAbilities;
 };
