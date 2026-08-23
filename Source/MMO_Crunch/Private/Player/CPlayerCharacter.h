@@ -3,7 +3,6 @@
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "../Character/CCharacter.h"
-#include "GAS/CGameplayAbilityTypes.h"
 #include "CPlayerCharacter.generated.h"
 
 UCLASS()
@@ -32,17 +31,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* MoveAction;
-
-	// Codex: Lesson 35 - Associates each Enhanced Input action with the
-	// enum value stored on its gameplay ability spec.
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	TMap<ECAbilityInputID, class UInputAction*> GameplayAbilityInputActions;
 	
 	void HandleLook(const FInputActionValue& LookActionValue);
 	void HandleMove(const FInputActionValue& MoveActionValue);
-
-	// Codex: Lesson 35 - Forwards local input state into the ASC.
-	void HandleAbilityInput(const FInputActionValue& InputActionValue, ECAbilityInputID InputID);
 
 	FVector GetMoveForwardVector() const;
 	FVector GetLookRightVector() const;
