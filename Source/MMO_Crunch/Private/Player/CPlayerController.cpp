@@ -1,5 +1,6 @@
 #include "CPlayerController.h"
 #include "CPlayerCharacter.h"
+#include "Net/UnrealNetwork.h"
 #include "Widget/GameplayWidget.h"
 void ACPlayerController::OnPossess(APawn* NewPawn)
 {
@@ -8,6 +9,7 @@ void ACPlayerController::OnPossess(APawn* NewPawn)
 	if (CPlayerCharacter)
 	{
 		CPlayerCharacter->ServerSideInit();
+		CPlayerCharacter->SetGenericTeamId(TeamId);
 	}
 }
 
@@ -20,6 +22,22 @@ void ACPlayerController::AcknowledgePossession(APawn* NewPawn)
 		CPlayerCharacter->ClientSideInit();
 		SpawnGameplayWidget();
 	}
+}
+
+void ACPlayerController::SetGenericTeamId(const FGenericTeamId& NewTeamID)
+{
+	TeamId = NewTeamID;
+}
+
+FGenericTeamId ACPlayerController::GetGenericTeamId() const
+{
+	return TeamId;
+}
+
+void ACPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ACPlayerController, TeamId);
 }
 
 void ACPlayerController::SpawnGameplayWidget()

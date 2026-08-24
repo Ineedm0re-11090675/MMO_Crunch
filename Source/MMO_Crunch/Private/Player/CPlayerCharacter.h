@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "../Character/CCharacter.h"
+#include "GAS/CGameplayAbilityTypes.h"
 #include "CPlayerCharacter.generated.h"
 
 UCLASS()
@@ -19,12 +20,23 @@ private:
 	
 	UPROPERTY(VisibleDefaultsOnly, Category = "View")
 	class USpringArmComponent* SpringArm;
+
+	FVector GetMoveForwardVector() const;
+	FVector GetLookRightVector() const;
+	FVector GeLookForwardVector() const;
+
+	/*
+	 *Input
+	 */
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputMappingContext* GamePlayInputMapContext;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TMap<ECAbilityInputId,class UInputAction*> GameplayAbilityInputAction;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* JumpAction;
+	UInputAction* JumpAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* LookAction;
@@ -34,8 +46,11 @@ private:
 	
 	void HandleLook(const FInputActionValue& LookActionValue);
 	void HandleMove(const FInputActionValue& MoveActionValue);
+	void HandleAbilityInput(const FInputActionValue& AbilityInputValue,ECAbilityInputId AbilityInputId);
 
-	FVector GetMoveForwardVector() const;
-	FVector GetLookRightVector() const;
-	FVector GeLookForwardVector() const;
+	/*
+	 *Death && Respawn
+	 */
+	virtual void OnDeath() override;
+	virtual void OnRespawn() override;
 };

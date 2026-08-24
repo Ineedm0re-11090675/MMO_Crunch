@@ -1,6 +1,11 @@
 #include "CAbilitySystemComponent.h"
-
+#include "GAS/CAttributeSet.h"
 #include "Conditions/MovieSceneScalabilityCondition.h"
+
+UCAbilitySystemComponent::UCAbilitySystemComponent()
+{
+	GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetHealthAttribute()).AddUObject(this, &UCAbilitySystemComponent::UpdateHealth);
+}
 
 void UCAbilitySystemComponent::ApplyInitialEffects()
 {
@@ -23,14 +28,36 @@ void UCAbilitySystemComponent::GiveInitialAbility()
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 	
-	for (const TSubclassOf<UGameplayAbility>& Ability : GameplayAbilities)
+	for (const TPair<ECAbilityInputId,TSubclassOf<UGameplayAbility>>& AbilityPair : GameplayAbilities)
 	{
-		GiveAbility(FGameplayAbilitySpec(Ability,0,-1,nullptr));
+		GiveAbility(FGameplayAbilitySpec(AbilityPair.Value,0,(int32)AbilityPair.Key,nullptr));
 	}
 	
-	for (const TSubclassOf<UGameplayAbility>& Ability : BasicGameplayAbilities)
+	for (const TPair<ECAbilityInputId,TSubclassOf<UGameplayAbility>>& AbilityPair : BasicGameplayAbilities)
 	{
-		//Level > 0  means you learn the Ability;
-		GiveAbility(FGameplayAbilitySpec(Ability,1,-1,nullptr));
+		GiveAbility(FGameplayAbilitySpec(AbilityPair.Value,1,(int32)AbilityPair.Key,nullptr));
+	}
+}
+
+void UCAbilitySystemComponent::ApplyFullStatsEffect()
+{
+	AuthApplyGameplayEffect(FullStatsEffect);
+}
+
+void UCAbilitySystemComponent::AuthApplyGameplayEffect(TSubclassOf<UGameplayEffect> GameplayEffect, int Level)
+{
+	if (GetOwner() && GetOwner()->HasAuthority())
+	{
+		FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingSpec(GameplayEffect ,Level , MakeEffectContext());
+		ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
+	}
+}
+
+void UCAbilitySystemComponent::UpdateHealth(const FOnAttributeChangeData& ChangedData)
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+	if (ChangedData.NewValue <= 0 && DeathEffect)
+	{
+		AuthApplyGameplayEffect(DeathEffect);
 	}
 }

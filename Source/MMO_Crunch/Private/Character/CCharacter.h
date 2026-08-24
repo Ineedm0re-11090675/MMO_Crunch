@@ -3,12 +3,14 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
+#include "GameplayTagContainer.h"
+#include "GenericTeamAgentInterface.h"
 #include "CCharacter.generated.h"
 /*
  **
  */
 UCLASS()
-class ACCharacter : public ACharacter,public IAbilitySystemInterface
+class ACCharacter : public ACharacter,public IAbilitySystemInterface ,public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 protected:
@@ -25,6 +27,7 @@ public:
 	/*
 	 *Gameplay Ability
 	*/
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 protected:
@@ -50,4 +53,44 @@ private:
 	FTimerHandle OverHeadStatsGaugeUpdateTimer;
 
 	void UpdateOverHeadStatsGauge();
+	/*
+	 *Death && Respawn
+	 */
+
+
+	FTransform MeshRelativeTransform;
+	
+	UPROPERTY(EditDefaultsOnly,Category= "Death")
+	UAnimMontage* DeathMontage;
+
+	UPROPERTY(EditDefaultsOnly,Category= "Death")
+	float DeathMontageFinishTimeShift = -0.8f;
+	FTimerHandle DeathMontageTimer;
+
+	void DeathMontageFinished();
+	void PlayDeathMontage();
+	void SetRagDollEnabled(bool bEnable);
+
+	void SetStatsGaugeEnabled(bool bEnabled);
+	
+	void BindGASChangedDelegate();
+	void HandleDeathTagChanged(const FGameplayTag Tag,int32 NewCount);
+	void StartDeathSequence();
+	void Respawn();
+
+	// for playCharacter
+	virtual void OnDeath();
+	virtual void OnRespawn();
+
+	/*
+	 *Team
+	 */
+	
+public:
+	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
+
+	virtual FGenericTeamId GetGenericTeamId() const override;
+private:
+	UPROPERTY(Replicated)
+	FGenericTeamId TeamId;
 };
