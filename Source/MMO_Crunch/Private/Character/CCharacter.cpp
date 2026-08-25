@@ -8,13 +8,26 @@
 #include "GAS/CAttributeSet.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "Perception/AISense_Sight.h"
 #include "Widget/OverHeadStatsGauge.h"
 
 void ACCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	ConfigureOverHeadStatsWidget();
-	MeshRelativeTransform =  GetMesh()->GetRelativeTransform(); 
+	MeshRelativeTransform =  GetMesh()->GetRelativeTransform();
+
+	/*AI detect 三层
+	 *
+	 *Character设置stimuli 可以被感知
+	 *
+	 *AI Perception Component 可以挂反馈，挂 Sight
+	 *
+	 *Sight挂参数
+	 */
+	
+	PerceptionStimuliSourceComponent->RegisterForSense(UAISense_Sight::StaticClass());
 }
 
 ACCharacter::ACCharacter()
@@ -29,6 +42,8 @@ ACCharacter::ACCharacter()
 	OverHeadWidget->SetupAttachment(GetRootComponent());
 
 	BindGASChangedDelegate();
+
+	PerceptionStimuliSourceComponent = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>("Perception Stimuli Source Component");
 }
 
 void ACCharacter::ServerSideInit()
@@ -73,7 +88,13 @@ UAbilitySystemComponent* ACCharacter::GetAbilitySystemComponent() const
 
 void ACCharacter::DeathMontageFinished()
 {
-	SetRagDollEnabled(true);
+	if (IsDead())
+	{
+		SetRagDollEnabled(true);
+	}else
+	{
+		
+	}
 }
 
 void ACCharacter::PlayDeathMontage()
@@ -135,13 +156,17 @@ void ACCharacter::HandleDeathTagChanged(const FGameplayTag Tag, int32 NewCount)
 void ACCharacter::StartDeathSequence()
 {
 	OnDeath();
-	
+
+	if (CAbilitySystemComponent)
+	{
+		CAbilitySystemComponent->CancelAllAbilities( );
+	}
 	PlayDeathMontage();
 	SetStatsGaugeEnabled(false);
 
 	GetCharacterMovement()->SetMovementMode(MOVE_None);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	
+	SetAIPerceptionStimulusSourceEnable(false);
 }
 
 void ACCharacter::Respawn()
@@ -154,6 +179,7 @@ void ACCharacter::Respawn()
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->GetAnimInstance()->StopAllMontages(0.f);
 	SetStatsGaugeEnabled(true);
+	SetAIPerceptionStimulusSourceEnable(true);
 
 	if (HasAuthority() && GetController())
 	{
@@ -198,6 +224,21 @@ void ACCharacter::UpdateOverHeadStatsGauge()
 		OverHeadWidget->SetHiddenInGame(DisSquared > HSGVisibleRangeSquared);
 	}
 }
+
+bool ACCharacter::IsDead() const
+{
+	return CAbilitySystemComponent->HasMatchingGameplayTag(UCAbilitySystemStatics::GetDeathStatsAbilityTag());
+}
+
+void ACCharacter::SpawnImmediately()
+{
+	if (HasAuthority())
+	{
+		CAbilitySystemComponent->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(UCAbilitySystemStatics::GetDeathStatsAbilityTag()));
+		
+	}
+}
+
 void ACCharacter::OnDeath()
 {
 }
@@ -214,4 +255,34 @@ void ACCharacter::SetGenericTeamId(const FGenericTeamId& NewTeamID)
 FGenericTeamId ACCharacter::GetGenericTeamId() const
 {
 	return TeamId;
+}
+
+void ACCharacter::OnRep_TeamID()
+{
+	//Override On Child
+}
+
+void ACCharacter::SetAIPerceptionStimulusSourceEnable(bool bEnable)
+{
+	if (!PerceptionStimuliSourceComponent) return;
+
+	if (bEnable)
+	{
+		PerceptionStimuliSourceComponent->RegisterWithPerceptionSystem();
+	}else
+	{
+		/*
+		*Character 活着 
+		↓ 
+		StimuliSource 已注册 
+		↓ 
+		AI 看到了它 
+		↓ 
+		PerceptionComponent 内部已经保存了一份 FAIStimulus
+
+		死亡后 Unregister的意义是 不再作为刺激源，但是之前的刺激信息还在，所以需要在AIC里把刺激信息做过期处理
+		*/
+		PerceptionStimuliSourceComponent->UnregisterFromPerceptionSystem();
+	}
+	
 }

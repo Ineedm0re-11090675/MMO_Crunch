@@ -18,6 +18,17 @@ public:
 private:
 	void ValueChanged(const FOnAttributeChangeData& ChangeData);
 	void MaxValueChanged(const FOnAttributeChangeData& ChangedData);
+	
+	UPROPERTY(EditAnywhere,Category = "Visual")
+	FSlateFontInfo ValueTextFont;
+
+	UPROPERTY(EditAnywhere,Category = "Visual")
+	bool bValueTextVisible =true;
+
+	UPROPERTY(EditAnywhere,Category = "Visual")
+	bool bProgressBarVisible=true;
+	
+	
 	UPROPERTY(EditAnywhere,Category = "Visual")
 	FLinearColor BarColor;
 	UPROPERTY(VisibleAnywhere,meta = (BindWidget))

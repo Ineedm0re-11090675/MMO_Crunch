@@ -56,8 +56,12 @@ private:
 	/*
 	 *Death && Respawn
 	 */
+public:
+	bool IsDead() const;
 
-
+	void SpawnImmediately();
+	
+private:
 	FTransform MeshRelativeTransform;
 	
 	UPROPERTY(EditDefaultsOnly,Category= "Death")
@@ -91,6 +95,17 @@ public:
 
 	virtual FGenericTeamId GetGenericTeamId() const override;
 private:
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing=OnRep_TeamID)
 	FGenericTeamId TeamId;
+
+	UFUNCTION()
+	virtual void OnRep_TeamID();
+	/*
+	 *AI
+	 */
+private:
+
+	void SetAIPerceptionStimulusSourceEnable(bool bEnable);
+	UPROPERTY()
+	class UAIPerceptionStimuliSourceComponent* PerceptionStimuliSourceComponent;	
 };
