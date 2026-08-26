@@ -46,6 +46,7 @@ void ACAIController::OnPossess(APawn* InPawn)
 	if (OwnerASC)
 	{
 		OwnerASC->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetDeathStatsAbilityTag()).AddUObject(this,&ACAIController::OnPawnDeathUpdated);
+		OwnerASC->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetStunStatsAbilityTag()).AddUObject(this,&ACAIController::OnPawnStunUpdated);
 	}
 	
 }
@@ -176,9 +177,23 @@ void ACAIController::OnPawnDeathUpdated(const FGameplayTag Tag, int32 Count)
 		//Stop Tree
 		GetBrainComponent()->StopLogic("Dead");
 		ClearAndDisableAllSenses();
+		bIsPawnDead = true;
 	}else
 	{
 		GetBrainComponent()->StartLogic();
 		EnableAllSenses();
+		bIsPawnDead = false;
+	}
+}
+
+void ACAIController::OnPawnStunUpdated(const FGameplayTag Tag, int32 Count)
+{
+	if(bIsPawnDead) return;
+	if (Count != 0)
+	{
+		GetBrainComponent()->StopLogic("Stun");
+	}else
+	{
+		GetBrainComponent()->StartLogic();
 	}
 }

@@ -94,19 +94,7 @@ void UGA_Combo::HandleTargetGroupReceive(FGameplayEventData Data)
 	for (const FHitResult& HitResult : HitResults)
 	{
 		TSubclassOf<UGameplayEffect> GameplayEffect = GetCurrentComboDamageEffect();
-		FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(GameplayEffect,GetAbilityLevel(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo()));
-
-		//将HitResult加入到GE的context信息内部，让BluePrint能读到HitResult，然后让GC读到FVX方向
-		FGameplayEffectContextHandle ContextHandle =MakeEffectContext(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo());
-		ContextHandle.AddHitResult(HitResult);
-		EffectSpecHandle.Data->SetContext(ContextHandle);
-		
-		ApplyGameplayEffectSpecToTarget(GetCurrentAbilitySpecHandle(),CurrentActorInfo,
-			CurrentActivationInfo,
-			EffectSpecHandle,
-			UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(HitResult.GetActor())
-			);
-		
+		ApplyGameplayEffectToHitResultActor(HitResult,GameplayEffect,GetAbilityLevel(CurrentSpecHandle,CurrentActorInfo));
 	}
 }
 

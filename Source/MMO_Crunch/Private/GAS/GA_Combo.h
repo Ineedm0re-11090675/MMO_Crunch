@@ -26,10 +26,8 @@ private:
 
 	UPROPERTY(EditDefaultsOnly,Category = "Gameplay Effect")
 	TMap<FName,TSubclassOf<UGameplayEffect>> DamageEffectsMap;
-
 	UPROPERTY(EditDefaultsOnly,Category = "Targetting")
 	float TargetSweepSphereRadius =30.f;
-
 	TSubclassOf<UGameplayEffect> GetCurrentComboDamageEffect() const;
 	
 	UFUNCTION()

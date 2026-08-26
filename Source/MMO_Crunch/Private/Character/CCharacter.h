@@ -60,7 +60,9 @@ public:
 	bool IsDead() const;
 
 	void SpawnImmediately();
-	
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_SendGameplayEventToSelf(const FGameplayTag& GameplayTag,const FGameplayEventData& GameplayEventData);
 private:
 	FTransform MeshRelativeTransform;
 	
@@ -79,6 +81,7 @@ private:
 	
 	void BindGASChangedDelegate();
 	void HandleDeathTagChanged(const FGameplayTag Tag,int32 NewCount);
+	void HandleStunTagChanged(const FGameplayTag Tag,int32 NewCount);
 	void StartDeathSequence();
 	void Respawn();
 
@@ -86,6 +89,14 @@ private:
 	virtual void OnDeath();
 	virtual void OnRespawn();
 
+	/*
+	 *Stun
+	 */
+	UPROPERTY(EditDefaultsOnly,Category= "Stun")
+	UAnimMontage* StunMontage;
+
+	virtual void OnStun();
+	virtual void OnRecoveryFromStun();
 	/*
 	 *Team
 	 */

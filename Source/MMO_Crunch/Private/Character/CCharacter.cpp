@@ -1,5 +1,6 @@
 #include "CCharacter.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -139,6 +140,7 @@ void ACCharacter::BindGASChangedDelegate()
 	if (CAbilitySystemComponent)
 	{
 		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetDeathStatsAbilityTag()).AddUObject(this,&ACCharacter::HandleDeathTagChanged);
+		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetStunStatsAbilityTag()).AddUObject(this,&ACCharacter::HandleStunTagChanged);
 	}
 }
 
@@ -153,6 +155,27 @@ void ACCharacter::HandleDeathTagChanged(const FGameplayTag Tag, int32 NewCount)
 	}
 }
 
+void ACCharacter::HandleStunTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	if (IsDead()) return;
+
+	if (NewCount != 0)
+	{
+		OnStun();
+		PlayAnimMontage(StunMontage);
+	}else
+	{
+		OnRecoveryFromStun();
+		StopAnimMontage(StunMontage);
+	}
+}
+void ACCharacter::OnStun()
+{
+}
+
+void ACCharacter::OnRecoveryFromStun()
+{
+}
 void ACCharacter::StartDeathSequence()
 {
 	OnDeath();
@@ -164,7 +187,7 @@ void ACCharacter::StartDeathSequence()
 	PlayDeathMontage();
 	SetStatsGaugeEnabled(false);
 
-	GetCharacterMovement()->SetMovementMode(MOVE_None);
+	//GetCharacterMovement()->SetMovementMode(MOVE_None);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	SetAIPerceptionStimulusSourceEnable(false);
 }
@@ -175,7 +198,7 @@ void ACCharacter::Respawn()
 
 
 	SetRagDollEnabled(false);
-	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	//GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->GetAnimInstance()->StopAllMontages(0.f);
 	SetStatsGaugeEnabled(true);
@@ -239,6 +262,18 @@ void ACCharacter::SpawnImmediately()
 	}
 }
 
+bool ACCharacter::Server_SendGameplayEventToSelf_Validate(const FGameplayTag& GameplayTag,
+	const FGameplayEventData& GameplayEventData)
+{
+	return true;
+}
+
+void ACCharacter::Server_SendGameplayEventToSelf_Implementation(const FGameplayTag& GameplayTag,
+                                                                const FGameplayEventData& GameplayEventData)
+{
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this,GameplayTag,GameplayEventData);
+}
+
 void ACCharacter::OnDeath()
 {
 }
@@ -246,6 +281,7 @@ void ACCharacter::OnDeath()
 void ACCharacter::OnRespawn()
 {
 }
+
 
 void ACCharacter::SetGenericTeamId(const FGenericTeamId& NewTeamID)
 {

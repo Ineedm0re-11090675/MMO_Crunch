@@ -47,4 +47,7 @@ private:
 	void EnableAllSenses();
 
 	void OnPawnDeathUpdated(const FGameplayTag Tag,int32 Count);
+	void OnPawnStunUpdated(const FGameplayTag Tag,int32 Count);
+
+	bool bIsPawnDead = false;
 };

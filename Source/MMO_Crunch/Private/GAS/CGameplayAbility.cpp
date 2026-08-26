@@ -1,6 +1,17 @@
 #include "CGameplayAbility.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
+#include "CAbilitySystemStatics.h"
+#include "GAP_Launched.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "GameFramework/Character.h"
+#include "Kismet/GameplayStatics.h"
+
+UCGameplayAbility::UCGameplayAbility()
+{
+	ActivationBlockedTags.AddTag(UCAbilitySystemStatics::GetStunStatsAbilityTag()); 
+}
 
 UAnimInstance* UCGameplayAbility::GetOwnerAnimInstance() const
 {
@@ -59,4 +70,56 @@ TArray<FHitResult> UCGameplayAbility::GetHitResultsFromSweepLocationTargetData (
 		}
 	}
 	return OutHitResults;
+}
+
+void UCGameplayAbility::PushSelf(const FVector& PushForce)
+{
+	ACharacter* OwnCharacter = GetAvatarCharacter();
+	if (OwnCharacter)
+	{
+		OwnCharacter->LaunchCharacter(PushForce,true,true);
+	}
+}
+
+void UCGameplayAbility::PushTarget(AActor* Target, const FVector& PushForce)
+{
+	if (!Target) return;
+
+	FGameplayEventData EventData;
+
+	//储存数据，在Uppercut储存，在 Launched里读取
+	FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit();
+	FHitResult HitResult;
+	HitResult.ImpactNormal = PushForce;
+	TargetData->HitResult = HitResult;
+	EventData.TargetData .Add(TargetData);
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Target,UGAP_Launched::GetLaunchedAbilityActivationTag(),EventData);
+}
+
+ACharacter* UCGameplayAbility::GetAvatarCharacter()
+{
+	if (!AvatarCharacter)
+	{
+		AvatarCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo());	
+	}
+	return AvatarCharacter;
+}
+
+void UCGameplayAbility::ApplyGameplayEffectToHitResultActor(const FHitResult& HitResult,
+	TSubclassOf<UGameplayEffect> GameplayEffect, int Level)
+{
+	FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(GameplayEffect,Level);
+
+	//将HitResult加入到GE的context信息内部，让BluePrint能读到HitResult，然后让GC读到FVX方向
+	FGameplayEffectContextHandle ContextHandle =MakeEffectContext(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo());
+	ContextHandle.AddHitResult(HitResult);
+	EffectSpecHandle.Data->SetContext(ContextHandle);
+		
+	ApplyGameplayEffectSpecToTarget(GetCurrentAbilitySpecHandle(),CurrentActorInfo,
+		CurrentActivationInfo,
+		EffectSpecHandle,
+		UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(HitResult.GetActor())
+		);
+		
 }

@@ -48,9 +48,15 @@ private:
 	void HandleMove(const FInputActionValue& MoveActionValue);
 	void HandleAbilityInput(const FInputActionValue& AbilityInputValue,ECAbilityInputId AbilityInputId);
 
+	void SetInputEnableFromPlayerController(bool bEnable);
 	/*
 	 *Death && Respawn
 	 */
 	virtual void OnDeath() override;
 	virtual void OnRespawn() override;
+	/*
+	 *Stun
+	 */
+	void OnStun() override;
+	void OnRecoveryFromStun() override;
 };

@@ -1,5 +1,6 @@
 #include "CPlayerCharacter.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -7,6 +8,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "GAS/CGameplayAbilityTypes.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GAS/CAbilitySystemStatics.h"
 
 ACPlayerCharacter::ACPlayerCharacter()
 {
@@ -102,24 +104,51 @@ void ACPlayerCharacter::HandleAbilityInput(const FInputActionValue& AbilityInput
 	{
 		GetAbilitySystemComponent()->AbilityLocalInputReleased((int32)AbilityInputId);
 	}
+	//上勾拳后，会block正常的combo，让这里触发combo 的press tag，这样可以做到连招而不是basic attack
+	if (AbilityInputId == ECAbilityInputId::BasicAttack)
+	{
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this,UCAbilitySystemStatics::GetBasicAttackPressedTag(),FGameplayEventData());
+		Server_SendGameplayEventToSelf(UCAbilitySystemStatics::GetBasicAttackPressedTag(),FGameplayEventData());
+		
+	}
 }
 
-void ACPlayerCharacter::OnDeath()
+void ACPlayerCharacter::SetInputEnableFromPlayerController(bool bEnable)
 {
 	APlayerController* OwningController = GetController<APlayerController>();
-	if (OwningController)
+	if (!OwningController)
+	{
+		return;
+	}
+	if (bEnable)
+	{
+		EnableInput(OwningController);
+	}else
 	{
 		DisableInput(OwningController);
 	}
 }
 
+void ACPlayerCharacter::OnDeath()
+{
+	SetInputEnableFromPlayerController(false);
+}
+
 void ACPlayerCharacter::OnRespawn()
 {
-	APlayerController* OwningController = GetController<APlayerController>();
-	if (OwningController)
-	{
-		EnableInput(OwningController);
-	}
+	SetInputEnableFromPlayerController(true);
+}
+
+void ACPlayerCharacter::OnStun()
+{
+	if (IsDead()) return;
+	SetInputEnableFromPlayerController(false);
+}
+
+void ACPlayerCharacter::OnRecoveryFromStun()
+{
+	if (IsDead()) return;
+	SetInputEnableFromPlayerController(true);
 }
 
 
