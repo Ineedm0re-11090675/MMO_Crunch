@@ -44,6 +44,11 @@ void UCAbilitySystemComponent::ApplyFullStatsEffect()
 	AuthApplyGameplayEffect(FullStatsEffect);
 }
 
+const TMap<ECAbilityInputId, TSubclassOf<UGameplayAbility>>& UCAbilitySystemComponent::GetAbility() const
+{
+	return GameplayAbilities;
+}
+
 void UCAbilitySystemComponent::AuthApplyGameplayEffect(TSubclassOf<UGameplayEffect> GameplayEffect, int Level)
 {
 	if (GetOwner() && GetOwner()->HasAuthority())

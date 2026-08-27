@@ -14,4 +14,7 @@ public:
 	static FGameplayTag GetDeathStatsAbilityTag();
 	static FGameplayTag GetStunStatsAbilityTag();
 	static FGameplayTag GetBasicAttackPressedTag();
+
+	static float GetStaticCooldownDurationFromAbility(const class UGameplayAbility* Ability);
+	static float GetStaticCostFromAbility(const UGameplayAbility* Ability);
 };

@@ -4,8 +4,11 @@
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
 #include "GameplayTagContainer.h"
+#include "GAS/CGameplayAbility.h"
+#include "GAS/CGameplayAbilityTypes.h"
 #include "GenericTeamAgentInterface.h"
 #include "CCharacter.generated.h"
+
 /*
  **
  */
@@ -30,6 +33,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	const TMap<ECAbilityInputId,TSubclassOf<class UGameplayAbility>>& GetAbility() const;
 protected:
 	UPROPERTY(VisibleDefaultsOnly,Category = "Gameplay Effects")
 	class UCAbilitySystemComponent* CAbilitySystemComponent;

@@ -87,6 +87,11 @@ UAbilitySystemComponent* ACCharacter::GetAbilitySystemComponent() const
 	return CAbilitySystemComponent;
 }
 
+const TMap<ECAbilityInputId, TSubclassOf<UGameplayAbility>>& ACCharacter::GetAbility() const
+{
+	return CAbilitySystemComponent->GetAbility();
+}
+
 void ACCharacter::DeathMontageFinished()
 {
 	if (IsDead())

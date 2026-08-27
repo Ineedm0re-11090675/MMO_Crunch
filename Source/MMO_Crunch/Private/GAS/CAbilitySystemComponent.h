@@ -14,6 +14,8 @@ public:
 	void ApplyInitialEffects();
 	void GiveInitialAbility();
 	void ApplyFullStatsEffect();
+
+	const TMap<ECAbilityInputId,TSubclassOf<UGameplayAbility>>& GetAbility() const ; 
 private:
 	void AuthApplyGameplayEffect(TSubclassOf<UGameplayEffect> GameplayEffect,int Level = 1);
 	

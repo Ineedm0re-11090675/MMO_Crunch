@@ -1,10 +1,12 @@
 #include "GameplayWidget.h"
+
+#include "AbilityListView.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "ValueGauge.h"
 #include "GAS/CAbilitySystemComponent.h"
+#include "GAS/CGameplayAbilityTypes.h"
 #include "GAS/CAttributeSet.h"
-
 void UGameplayWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -23,3 +25,17 @@ void UGameplayWidget::NativeConstruct()
 			
 	}
 }
+
+void UGameplayWidget::ConfigureAbility(
+	const TMap<ECAbilityInputId, TSubclassOf<class UGameplayAbility>>& Abilities)
+{
+	AbilityList->ConfigureAbility(Abilities);
+}
+
+
+/*
+ *当前路径
+ *PlayerController生成GameplayWidget的同时 Configure，同时访问Character拿到Ability Map
+ *触发ListView的Configure
+ *ListView 的Configure在生成AbilityGauge之前 挂了委托 ，委托从DataTable里找到信息，更新了Ability的Icon
+ */
