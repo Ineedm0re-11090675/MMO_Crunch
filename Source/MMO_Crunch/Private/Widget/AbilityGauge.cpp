@@ -27,6 +27,7 @@ void UAbilityGauge::NativeConstruct()
 	CooldownCounterText->SetVisibility(ESlateVisibility::Hidden);
 
 	UAbilitySystemComponent* OwnASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwningPlayerPawn());
+
 	if (OwnASC)
 	{
 		OwnASC->AbilityCommittedCallbacks.AddUObject(this,&UAbilityGauge::AbilityCommittedCallback); 

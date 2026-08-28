@@ -97,6 +97,20 @@ void UCGameplayAbility::PushTarget(AActor* Target, const FVector& PushForce)
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Target,UGAP_Launched::GetLaunchedAbilityActivationTag(),EventData);
 }
 
+void UCGameplayAbility::PushTargets(const TArray<AActor*> Actors, const FVector& PushForce)
+{
+	for (AActor* Actor : Actors)
+	{
+		PushTarget(Actor,PushForce);
+	}
+}
+
+void UCGameplayAbility::PushTargets(const FGameplayAbilityTargetDataHandle& TargetDataHandle, const FVector& PushForce)
+{
+	TArray<AActor*> Targets = UAbilitySystemBlueprintLibrary::GetAllActorsFromTargetData(TargetDataHandle);
+	PushTargets(Targets,PushForce);
+}
+
 ACharacter* UCGameplayAbility::GetAvatarCharacter()
 {
 	if (!AvatarCharacter)

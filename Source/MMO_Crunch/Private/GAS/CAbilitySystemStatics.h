@@ -12,9 +12,10 @@ class UCAbilitySystemStatics  :public UBlueprintFunctionLibrary
 public:
 	static FGameplayTag GetBasicAttackAbilityTag();
 	static FGameplayTag GetDeathStatsAbilityTag();
+	static FGameplayTag GetAimingStatsAbilityTag();
 	static FGameplayTag GetStunStatsAbilityTag();
 	static FGameplayTag GetBasicAttackPressedTag();
-
+	static FGameplayTag GetCameraShakeGameplayCueTag();
 	static float GetStaticCooldownDurationFromAbility(const class UGameplayAbility* Ability);
 	static float GetStaticCostFromAbility(const UGameplayAbility* Ability);
 };

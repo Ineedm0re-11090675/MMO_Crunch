@@ -15,6 +15,9 @@ public:
 	virtual void PawnClientRestart() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 private:
+	UPROPERTY()
+	class UCHeroAttributeSet* HeroAttributeSet;
+	
 	UPROPERTY(VisibleDefaultsOnly, Category = "View")
 	class UCameraComponent* CameraComp;
 	
@@ -59,4 +62,20 @@ private:
 	 */
 	void OnStun() override;
 	void OnRecoveryFromStun() override;
+	/*
+	 *Camera View
+	 */
+private: 
+	virtual void OnAimChange(bool bIsAiming) override;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera View")
+	FVector CameraAimLocalOffset;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera View")
+	float CameraLerpSpeed =20.f;
+
+	FTimerHandle CameraLerpTimerHandle;
+
+	void LerpCameraToLocalOffsetLocation(const FVector& Goal );
+	void TickCameraLocalOffset(FVector Goal);
 };

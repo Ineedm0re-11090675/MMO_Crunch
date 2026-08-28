@@ -18,7 +18,8 @@ protected:
 	FORCEINLINE bool ShouldDrawDebugSphere() const { return bShowDebugSphere; }
 	void PushSelf(const FVector& PushForce);
 	void PushTarget(AActor* Target,const FVector& PushForce);
-
+	void PushTargets(const TArray<AActor*>Actors,const FVector& PushForce);
+	void PushTargets(const FGameplayAbilityTargetDataHandle& TargetDataHandle,const FVector& PushForce);
 	ACharacter* GetAvatarCharacter();
 	void  ApplyGameplayEffectToHitResultActor(const FHitResult& HitResult,TSubclassOf<UGameplayEffect> GameplayEffect,int Level = 1);
 private: 

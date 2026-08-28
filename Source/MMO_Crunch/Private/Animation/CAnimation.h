@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "GameplayTagContainer.h"
 #include "CAnimation.generated.h"
 
 UCLASS()
@@ -30,7 +31,17 @@ public:
 	
 	UFUNCTION(BlueprintCallable,meta = (BlueprintThreadSafe))
 	FORCEINLINE float GetLookOffsetPitch() const{return LookRotOffset.Pitch;}
+	
+	UFUNCTION(BlueprintCallable,meta = (BlueprintThreadSafe))
+	FORCEINLINE bool GetIsAiming() const{return bIsAiming;}
 
+	UFUNCTION(BlueprintCallable,meta = (BlueprintThreadSafe))
+	FORCEINLINE float GetRightSpeed() const{return RightSpeed ;}
+
+	UFUNCTION(BlueprintCallable,meta = (BlueprintThreadSafe))
+	FORCEINLINE float GetForwardSpeed() const{return ForwardSpeed  ;}
+	UFUNCTION(BlueprintCallable,meta = (BlueprintThreadSafe))
+	bool ShouldDoFullBody() const;
 private:
 	UPROPERTY()
 	ACharacter* OwnerCharacter;
@@ -39,6 +50,9 @@ private:
 
 	float Speed;
 
+	float RightSpeed;
+	float ForwardSpeed;
+	
 	float YawSpeed;
 	float SmoothedYawSpeed;
 
@@ -48,6 +62,9 @@ private:
 	FRotator BodyPreRot;
 
 	bool bIsJumping;
+	bool bIsAiming;
 
 	FRotator LookRotOffset;
+
+	void OnAimTagChange(const FGameplayTag Tag, int32 NewCount);
 };

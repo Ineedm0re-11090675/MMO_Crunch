@@ -9,12 +9,15 @@
 #include "GAS/CGameplayAbilityTypes.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GAS/CAbilitySystemStatics.h"
+#include "GAS/CHeroAttributeSet.h"
+#include "MMO_Crunch/MMO_Crunch.h"
 
 ACPlayerCharacter::ACPlayerCharacter()
 {
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>("Camera Spring");
 	SpringArm->SetupAttachment(RootComponent);
 	SpringArm->bUsePawnControlRotation = true;
+	SpringArm->ProbeChannel = ECC_SpringArm;
 
 	CameraComp = CreateDefaultSubobject<UCameraComponent>("Camera");
 	CameraComp->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
@@ -24,6 +27,8 @@ ACPlayerCharacter::ACPlayerCharacter()
 	// Rotate With Controller viewDir
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 720.0f, 0.0f);
+
+	HeroAttributeSet = CreateDefaultSubobject<UCHeroAttributeSet>(FName("Hero Attribute Set"));
 }
 
 void ACPlayerCharacter::PawnClientRestart()
@@ -149,6 +154,33 @@ void ACPlayerCharacter::OnRecoveryFromStun()
 {
 	if (IsDead()) return;
 	SetInputEnableFromPlayerController(true);
+}
+
+void ACPlayerCharacter::OnAimChange(bool bIsAiming)
+{
+	LerpCameraToLocalOffsetLocation(bIsAiming?CameraAimLocalOffset:FVector{0.f});
+}
+
+void ACPlayerCharacter::LerpCameraToLocalOffsetLocation(const FVector& Goal)
+{
+	GetWorldTimerManager().ClearTimer(CameraLerpTimerHandle);
+	GetWorldTimerManager().SetTimerForNextTick(FTimerDelegate::CreateUObject(this,&ACPlayerCharacter::TickCameraLocalOffset,Goal));
+}
+
+void ACPlayerCharacter::TickCameraLocalOffset(FVector Goal)
+{
+	FVector CurrentLocalOffset =CameraComp->GetRelativeLocation();
+	if (FVector::Dist(Goal,CurrentLocalOffset) < 1.f)
+	{
+		CameraComp->SetRelativeLocation(Goal);
+		return;
+	}
+
+	float LerpAlpha = FMath::Clamp(GetWorld()->GetDeltaSeconds() * CameraLerpSpeed,0.f,1.f);
+
+	FVector NewLocalOffset =FMath::Lerp(CurrentLocalOffset,Goal,LerpAlpha);
+	CameraComp->SetRelativeLocation(NewLocalOffset);
+	GetWorldTimerManager().SetTimerForNextTick(FTimerDelegate::CreateUObject(this,&ACPlayerCharacter::TickCameraLocalOffset,Goal));
 }
 
 

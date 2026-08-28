@@ -85,8 +85,13 @@ private:
 	void SetStatsGaugeEnabled(bool bEnabled);
 	
 	void BindGASChangedDelegate();
+	
 	void HandleDeathTagChanged(const FGameplayTag Tag,int32 NewCount);
 	void HandleStunTagChanged(const FGameplayTag Tag,int32 NewCount);
+	void HandleAimingTagChanged(const FGameplayTag Tag,int32 NewCount);
+	void SetIsAiming(bool bIsAiming);
+	virtual void OnAimChange(bool bIsAiming);
+	
 	void StartDeathSequence();
 	void Respawn();
 
@@ -125,3 +130,5 @@ private:
 	UPROPERTY()
 	class UAIPerceptionStimuliSourceComponent* PerceptionStimuliSourceComponent;	
 };
+
+

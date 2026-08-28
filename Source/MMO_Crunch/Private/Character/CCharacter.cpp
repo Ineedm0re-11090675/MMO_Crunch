@@ -8,6 +8,7 @@
 #include "GAS/CAbilitySystemStatics.h"
 #include "GAS/CAttributeSet.h"
 #include "Kismet/GameplayStatics.h"
+#include "MMO_Crunch/MMO_Crunch.h"
 #include "Net/UnrealNetwork.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
@@ -19,6 +20,7 @@ void ACCharacter::BeginPlay()
 	ConfigureOverHeadStatsWidget();
 	MeshRelativeTransform =  GetMesh()->GetRelativeTransform();
 
+	
 	/*AI detect 三层
 	 *
 	 *Character设置stimuli 可以被感知
@@ -36,6 +38,8 @@ ACCharacter::ACCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_SpringArm,ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Target,ECR_Ignore);
 	CAbilitySystemComponent = CreateDefaultSubobject<UCAbilitySystemComponent>("CAbility System Component");
 	CAttributeSet = CreateDefaultSubobject<UCAttributeSet>(FName("CAttribute Set"));
 
@@ -146,6 +150,7 @@ void ACCharacter::BindGASChangedDelegate()
 	{
 		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetDeathStatsAbilityTag()).AddUObject(this,&ACCharacter::HandleDeathTagChanged);
 		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetStunStatsAbilityTag()).AddUObject(this,&ACCharacter::HandleStunTagChanged);
+		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetAimingStatsAbilityTag()).AddUObject(this,&ACCharacter::HandleAimingTagChanged);
 	}
 }
 
@@ -174,6 +179,23 @@ void ACCharacter::HandleStunTagChanged(const FGameplayTag Tag, int32 NewCount)
 		StopAnimMontage(StunMontage);
 	}
 }
+
+void ACCharacter::HandleAimingTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	SetIsAiming(NewCount !=0);
+}
+void ACCharacter::OnAimChange(bool bIsAiming)
+{
+	//Override on child;
+}
+
+void ACCharacter::SetIsAiming(bool bIsAiming)
+{
+	bUseControllerRotationYaw = bIsAiming;
+	GetCharacterMovement()->bOrientRotationToMovement = !bIsAiming;
+	OnAimChange(bIsAiming);
+}
+
 void ACCharacter::OnStun()
 {
 }
