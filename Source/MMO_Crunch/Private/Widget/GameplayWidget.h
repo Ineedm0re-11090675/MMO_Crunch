@@ -22,6 +22,22 @@ private:
 	UPROPERTY(meta=(BindWidget))
 	class UAbilityListView* AbilityList;
 
+	
+	UPROPERTY(meta=(BindWidget))
+	class UStatsGauge* AttackAttribute;
+
+	UPROPERTY(meta=(BindWidget))
+	UStatsGauge* Armor;
+
+	UPROPERTY(meta=(BindWidget))
+	UStatsGauge* MoveSpeed;
+
+	UPROPERTY(meta=(BindWidget))
+	UStatsGauge* Intelligence;
+
+	UPROPERTY(meta=(BindWidget))
+	UStatsGauge* Strength;
+	
 	UPROPERTY()
 	class UAbilitySystemComponent* AbilitySystemComponent;
 };
