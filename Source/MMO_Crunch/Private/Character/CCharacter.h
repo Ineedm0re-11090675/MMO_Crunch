@@ -128,7 +128,15 @@ private:
 
 	void SetAIPerceptionStimulusSourceEnable(bool bEnable);
 	UPROPERTY()
-	class UAIPerceptionStimuliSourceComponent* PerceptionStimuliSourceComponent;	
+	class UAIPerceptionStimuliSourceComponent* PerceptionStimuliSourceComponent;
+
+
+	/*
+	*Attribute Update
+	*/
+	void MoveSpeedUpdated(const FOnAttributeChangeData& Data);
+	void MaxHealthUpdated(const FOnAttributeChangeData& Data);
+	void MaxManaUpdated(const FOnAttributeChangeData& Data); 
 };
 
 

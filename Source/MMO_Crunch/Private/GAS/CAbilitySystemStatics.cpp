@@ -1,4 +1,7 @@
 #include "CAbilitySystemStatics.h"
+
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemInterface.h"
 #include "Abilities/GameplayAbility.h"
 #include "GameplayEffect.h"
 
@@ -30,6 +33,52 @@ FGameplayTag UCAbilitySystemStatics::GetBasicAttackPressedTag()
 FGameplayTag UCAbilitySystemStatics::GetCameraShakeGameplayCueTag()
 {
 	return FGameplayTag::RequestGameplayTag("GameplayCue.hit.reaction"); 
+}
+
+FGameplayTag UCAbilitySystemStatics::GetFullHealthStatsAbilityTag()
+{
+	return FGameplayTag::RequestGameplayTag("stats.health.full");  
+}
+
+FGameplayTag UCAbilitySystemStatics::GetFullManaStatsAbilityTag()
+{
+	return FGameplayTag::RequestGameplayTag("stats.mana.full");  
+}
+
+FGameplayTag UCAbilitySystemStatics::GetEmptyHealthStatsAbilityTag()
+{
+	return FGameplayTag::RequestGameplayTag("stats.health.empty");  
+}
+
+FGameplayTag UCAbilitySystemStatics::GetEmptyManaStatsAbilityTag()
+{
+	return FGameplayTag::RequestGameplayTag("stats.mana.empty");   
+}
+
+bool UCAbilitySystemStatics::IsHero(const AActor* ActorToCheck)
+{
+	const IAbilitySystemInterface* ActorISA = Cast<IAbilitySystemInterface>(ActorToCheck);
+	UAbilitySystemComponent* ActorASC = ActorISA ? ActorISA->GetAbilitySystemComponent() : nullptr;
+	if (ActorASC)
+	{
+		return  ActorASC->HasMatchingGameplayTag(GetHeroTag());
+	}
+	return false;
+}
+
+FGameplayTag UCAbilitySystemStatics::GetHeroTag()
+{
+	return FGameplayTag::RequestGameplayTag("role.hero");   
+}
+
+FGameplayTag UCAbilitySystemStatics::GetExpAttributeTag()
+{
+	return FGameplayTag::RequestGameplayTag("attr.experience");   
+}
+
+FGameplayTag UCAbilitySystemStatics::GetGoldAttributeTag()
+{
+	return FGameplayTag::RequestGameplayTag("attr.gold"); 
 }
 
 float UCAbilitySystemStatics::GetStaticCooldownDurationFromAbility(const UGameplayAbility* Ability)

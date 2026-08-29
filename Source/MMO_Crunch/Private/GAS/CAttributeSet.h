@@ -25,6 +25,8 @@ public:
 	ATTRIBUTE_ACCESSORS(UCAttributeSet, AttackDamage)
 	ATTRIBUTE_ACCESSORS(UCAttributeSet, Armor)
 	ATTRIBUTE_ACCESSORS(UCAttributeSet, MoveSpeed)
+	ATTRIBUTE_ACCESSORS(UCAttributeSet, CachedManaPercent)
+	ATTRIBUTE_ACCESSORS(UCAttributeSet, CachedHealthPercent)
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/*
@@ -45,6 +47,10 @@ public:
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;
+
+	void RescaleHealth();
+
+	void RescaleMana();
 private:
 	UPROPERTY(ReplicatedUsing=OnRep_Heath)
 	FGameplayAttributeData Health;
@@ -52,13 +58,22 @@ private:
 	FGameplayAttributeData MaxHealth;
 	UPROPERTY(ReplicatedUsing=OnRep_Mana)
 	FGameplayAttributeData Mana;
+	
 	UPROPERTY(ReplicatedUsing=OnRep_MaxMana)
 	FGameplayAttributeData MaxMana;
 
+	UPROPERTY()
+	FGameplayAttributeData CachedManaPercent;
+
+	UPROPERTY()
+	FGameplayAttributeData CachedHealthPercent;
+	
 	UPROPERTY(ReplicatedUsing=OnRep_AttackDamage)
 	FGameplayAttributeData AttackDamage;
+	
 	UPROPERTY(ReplicatedUsing=OnRep_Armor)
 	FGameplayAttributeData Armor;
+	
 	UPROPERTY(ReplicatedUsing=OnRep_MoveSpeed)
 	FGameplayAttributeData MoveSpeed;
 	UFUNCTION()
