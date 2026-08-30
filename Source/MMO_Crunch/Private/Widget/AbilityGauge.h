@@ -3,7 +3,11 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include  "Blueprint/IUserObjectListEntry.h"
+#include "GameplayEffectTypes.h"
 #include "AbilityGauge.generated.h"
+
+class UAbilitySystemComponent;
+struct FGameplayAbilitySpec;
 
 USTRUCT(BlueprintType)
 struct FAbilityWidgetData : public FTableRowBase
@@ -36,11 +40,23 @@ private:
 	UPROPERTY(EditDefaultsOnly,Category="Visual")
 	FName CooldownPercentParaName =  "Percent" ;
 
+	UPROPERTY(EditDefaultsOnly,Category="Visual")
+	FName AbilityLevelParaName =  "Level" ;
+
+	UPROPERTY(EditDefaultsOnly,Category="Visual")
+	FName CanCastParaName =  "CanCast" ;
+
+	UPROPERTY(EditDefaultsOnly,Category="Visual")
+	FName UpgradePointAvailableParaName =  "UpgradePointAvailable" ;
+
 	UPROPERTY(EditDefaultsOnly,Category="Cooldown")
 	float CooldownUpdateInterval = 0.1f;
 	
 	UPROPERTY(meta=(BindWidget))
 	class UImage* Icon;
+
+	UPROPERTY(meta=(BindWidget))
+	UImage* LevelGauge;
 	
 	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* CooldownDurationText;
@@ -70,4 +86,20 @@ private:
 
 	void CooldownFinish();
 	void UpdateCooldown();
+	UPROPERTY()
+	const UAbilitySystemComponent* OwningASC;
+
+	const FGameplayAbilitySpec* CachedAbilitySpec;
+
+	const FGameplayAbilitySpec* GetAbilitySpec();
+
+	bool bIsAbilityLearned = false;
+
+	void AbilitySpecUpdated(const FGameplayAbilitySpec& Spec);
+
+	void UpdateCanCast();
+
+	void UpgradePointUpdated(const FOnAttributeChangeData & Data);
+
+	void ManaUpdated(const FOnAttributeChangeData & Data);
 };

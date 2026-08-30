@@ -238,6 +238,14 @@ void ACCharacter::Respawn()
 }
 
 
+void ACCharacter::UpgradeAbilityWithInputID(ECAbilityInputId InputID)
+{
+	if (CAbilitySystemComponent)
+	{
+		CAbilitySystemComponent->Server_UpgradeAbilityWithID(InputID);
+	}
+}
+
 void ACCharacter::ConfigureOverHeadStatsWidget()
 {
 	if (OverHeadWidget == nullptr)return;

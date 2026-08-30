@@ -57,7 +57,7 @@ void UCAttributeSet::RescaleMana()
 
 	if (GetCachedManaPercent() == 0 ||  GetMana() == 0) return;
 
-	SetHealth(GetMaxMana() * GetCachedManaPercent() )  ;
+	SetMana(GetMaxMana() * GetCachedManaPercent() )  ;
 }
 
 void UCAttributeSet::OnRep_Heath(const FGameplayAttributeData& OldValue)

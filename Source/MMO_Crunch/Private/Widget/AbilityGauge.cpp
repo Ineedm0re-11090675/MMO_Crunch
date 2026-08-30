@@ -5,8 +5,11 @@
 #include "Abilities/GameplayAbility.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
-#include "GAS/CAbilitySystemStatics.h"
-#include "GAS/CAbilitySystemStatics.h"
+#include "GAS/CAbilitySystemStatics.h" 
+#include "GAS/CAttributeSet.h"
+#include "GAS/CHeroAttributeSet.h"
+
+
 void UAbilityGauge::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
 	//这个函数在AbilityListView调用AddItem时触发， 
@@ -18,7 +21,8 @@ void UAbilityGauge::NativeOnListItemObjectSet(UObject* ListItemObject)
 	float Cost =UCAbilitySystemStatics::GetStaticCostFromAbility(AbilityCDO);
 
 	CostText->SetText(FText::AsNumber(Cost));
-	CooldownDurationText->SetText(FText::AsNumber(CooldownDuration)); 
+	CooldownDurationText->SetText(FText::AsNumber(CooldownDuration));
+	LevelGauge->GetDynamicMaterial()->SetScalarParameterValue(AbilityLevelParaName,0);
 }
 
 void UAbilityGauge::NativeConstruct()
@@ -31,8 +35,24 @@ void UAbilityGauge::NativeConstruct()
 	if (OwnASC)
 	{
 		OwnASC->AbilityCommittedCallbacks.AddUObject(this,&UAbilityGauge::AbilityCommittedCallback); 
+		//之前在ASC做了Update之后的DirtyCall，就可以在这里相应了
+		OwnASC->AbilitySpecDirtiedCallbacks.AddUObject(this,&UAbilityGauge::AbilitySpecUpdated);
+		OwnASC->GetGameplayAttributeValueChangeDelegate(UCHeroAttributeSet::GetUpgradePointAttribute()).AddUObject(this,&UAbilityGauge::UpgradePointUpdated);
+		OwnASC->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetManaAttribute()).AddUObject(this,&UAbilityGauge::ManaUpdated);
+		
+		//初始1级在此手动更新
+		bool bFound = false;
+		float UpgradePoint = OwnASC->GetGameplayAttributeValue(UCHeroAttributeSet::GetUpgradePointAttribute(),bFound);
+		if (bFound)
+		{
+			FOnAttributeChangeData ChangeData;
+			ChangeData.NewValue = UpgradePoint;
+			UpgradePointUpdated(ChangeData);
+		}
+		 
 	}
-
+ 
+	OwningASC =OwnASC;
 	WholeNumericFormattingOptions.MaximumFractionalDigits =0;
 	TwoDigitNumberFormattingOptions.MaximumFractionalDigits =2;
 	
@@ -90,4 +110,66 @@ void UAbilityGauge::UpdateCooldown()
 	CooldownCounterText->SetText(FText::AsNumber(CachedCooldownTimeRemaining,NumericFormattingOptions));
 
 	Icon->GetDynamicMaterial()->SetScalarParameterValue(CooldownPercentParaName,1.f-CachedCooldownTimeRemaining/CachedCooldownDuration);
+}
+
+const FGameplayAbilitySpec* UAbilityGauge::GetAbilitySpec()
+{
+	if (!CachedAbilitySpec)
+	{
+		if (AbilityCDO && OwningASC)
+		{
+			CachedAbilitySpec =OwningASC->FindAbilitySpecFromClass(AbilityCDO->GetClass());
+		}
+	}
+	return CachedAbilitySpec;
+}
+
+void UAbilityGauge::AbilitySpecUpdated(const FGameplayAbilitySpec& Spec)
+{
+	if (Spec.Ability != AbilityCDO) return;
+
+	bIsAbilityLearned =  Spec.Level > 0;
+	LevelGauge->GetDynamicMaterial()->SetScalarParameterValue(AbilityLevelParaName,Spec.Level);
+	UpdateCanCast();
+
+	 float NewCooldownDuration = UCAbilitySystemStatics::GetCooldownFor(Spec.Ability,*OwningASC,Spec.Level);
+	 float NewCost =UCAbilitySystemStatics::GetManaCostFor(Spec.Ability,*OwningASC,Spec.Level);
+
+	CooldownDurationText->SetText(FText::AsNumber(NewCooldownDuration) );
+	CostText->SetText(FText::AsNumber(NewCost));
+}
+
+void UAbilityGauge::UpdateCanCast()
+{
+	const FGameplayAbilitySpec* AbilitySpec = GetAbilitySpec();
+	bool bCanCast = bIsAbilityLearned;
+	if (AbilitySpec)
+	{
+		if (OwningASC && !UCAbilitySystemStatics::CheckAbilityCost(*AbilitySpec, *OwningASC))
+		{
+			bCanCast = false;
+		}
+	}
+	Icon->GetDynamicMaterial()->SetScalarParameterValue(CanCastParaName,bCanCast?1.f:0.f);
+}
+
+void UAbilityGauge::UpgradePointUpdated(const FOnAttributeChangeData& Data)
+{
+	bool HasUpgradePoint = Data.NewValue >0;
+	const FGameplayAbilitySpec* AbilitySpec = GetAbilitySpec();
+	if (AbilitySpec)
+	{
+		if (UCAbilitySystemStatics::IsAbilityAtMaxLevel(*AbilitySpec))
+		{
+			Icon->GetDynamicMaterial()->SetScalarParameterValue(UpgradePointAvailableParaName,0.f);
+			return;
+		}
+	}
+	Icon->GetDynamicMaterial()->SetScalarParameterValue(UpgradePointAvailableParaName,HasUpgradePoint?1.f:0.f);
+}
+
+void UAbilityGauge::ManaUpdated(const FOnAttributeChangeData& Data)
+{
+	//消耗蓝 然后更新该技能是非应该为灰色
+	UpdateCanCast();
 }

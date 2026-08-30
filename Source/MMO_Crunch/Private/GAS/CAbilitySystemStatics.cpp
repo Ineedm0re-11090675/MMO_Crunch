@@ -81,6 +81,11 @@ FGameplayTag UCAbilitySystemStatics::GetGoldAttributeTag()
 	return FGameplayTag::RequestGameplayTag("attr.gold"); 
 }
 
+bool UCAbilitySystemStatics::IsAbilityAtMaxLevel(const FGameplayAbilitySpec& AbilitySpec)
+{ 
+	return AbilitySpec.Level  >= 4;
+}
+
 float UCAbilitySystemStatics::GetStaticCooldownDurationFromAbility(const UGameplayAbility* Ability)
 {
 	if (!Ability) return 0.f;
@@ -103,4 +108,88 @@ float UCAbilitySystemStatics::GetStaticCostFromAbility(const UGameplayAbility* A
 	float Cost = 0.f;
 	CostEffect->Modifiers[0].ModifierMagnitude.GetStaticMagnitudeIfPossible(1,Cost);
 	return FMath::Abs(Cost) ; 
+}
+
+bool UCAbilitySystemStatics::CheckAbilityCost(const FGameplayAbilitySpec& AbilitySpec,
+	const UAbilitySystemComponent& AbilitySystemComponent)
+{
+	//
+	//查看当前蓝是否支持释放技能
+	//
+	const UGameplayAbility* AbilityCOD = AbilitySpec.Ability;
+	if (AbilityCOD)
+	{
+		return AbilityCOD->CheckCost(AbilitySpec.Handle,AbilitySystemComponent.AbilityActorInfo.Get());
+	}
+	 return false;
+}
+
+float UCAbilitySystemStatics::GetManaCostFor(const UGameplayAbility* AbilityCOD, const UAbilitySystemComponent& OwnASC,
+	int Level)
+{
+	//根据Level查耗蓝量，然后更新在AbilityGauge
+	/*
+		*Ability
+		↓
+		找到 Cost GE
+		↓
+		按指定 Level 创建 GE Spec
+		↓
+		计算 Modifier[0] 的 Magnitude
+		↓
+		得到 -50
+		↓
+		Abs
+		↓
+		返回 50
+	*/
+	float ManaCost = 0.f;
+	if (AbilityCOD)
+	{
+		UGameplayEffect* CostEffect =AbilityCOD->GetCostGameplayEffect();
+		if (CostEffect)
+		{
+			FGameplayEffectSpecHandle EffectHandle = OwnASC.MakeOutgoingSpec(CostEffect->GetClass(),Level,OwnASC.MakeEffectContext());
+			CostEffect->Modifiers[0].ModifierMagnitude.AttemptCalculateMagnitude(* EffectHandle.Data.Get(),ManaCost);
+		}
+	}
+	return FMath::Abs(ManaCost);
+}
+
+float UCAbilitySystemStatics::GetCooldownFor(const UGameplayAbility* AbilityCOD, const UAbilitySystemComponent& OwnASC,
+	int Level)
+{
+	float Cooldown = 0.f;
+	if (AbilityCOD)
+	{
+		UGameplayEffect* CooldownEffect =AbilityCOD->GetCooldownGameplayEffect();
+		if (CooldownEffect)
+		{
+			FGameplayEffectSpecHandle EffectHandle = OwnASC.MakeOutgoingSpec(CooldownEffect->GetClass(),Level,OwnASC.MakeEffectContext());
+			CooldownEffect->DurationMagnitude.AttemptCalculateMagnitude(* EffectHandle.Data.Get(),Cooldown );
+		}
+	}
+	return FMath::Abs(Cooldown);
+}
+
+float UCAbilitySystemStatics::GetCooldownRemainingFor(const UGameplayAbility* AbilityCOD,
+	const UAbilitySystemComponent& OwnASC)
+{
+	if (!AbilityCOD) return 0.f;
+	UGameplayEffect* CooldownEffect =AbilityCOD->GetCooldownGameplayEffect();
+	if (!CooldownEffect) return 0.f;
+	FGameplayEffectQuery CooldownEffectQuery;
+	CooldownEffectQuery.EffectDefinition = CooldownEffect->GetClass();
+
+	float CooldownRemaining = 0.f;
+	FJsonSerializableArrayFloat CooldownRemainings = OwnASC.GetActiveEffectsTimeRemaining(CooldownEffectQuery);
+
+	for (float Remaining : CooldownRemainings)
+	{
+		if (Remaining > CooldownRemaining)
+		{
+			CooldownRemaining = Remaining;
+		}
+	}
+	return FMath::Abs(CooldownRemaining); 
 }

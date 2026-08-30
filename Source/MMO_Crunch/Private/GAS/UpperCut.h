@@ -33,10 +33,7 @@ private:
 	UFUNCTION()
 	void StartLaunching(FGameplayEventData EventData);
 
-
-	UPROPERTY(EditDefaultsOnly,Category = "Targetting")
-	float TargetSweepSphereRadius =30.f;
-
+	
 	UFUNCTION()
 	void HandleComboChangeEvent(FGameplayEventData Data);
 

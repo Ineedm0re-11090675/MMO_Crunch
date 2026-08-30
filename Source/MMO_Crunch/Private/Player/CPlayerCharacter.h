@@ -42,6 +42,9 @@ private:
 	UInputAction* JumpAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* UpgradeAbilityAction;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* LookAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -49,6 +52,9 @@ private:
 	
 	void HandleLook(const FInputActionValue& LookActionValue);
 	void HandleMove(const FInputActionValue& MoveActionValue);
+	void LearnAbilityLeaderDown(const FInputActionValue& MoveActionValue);
+	void LearnAbilityLeaderUp(const FInputActionValue& MoveActionValue);
+	bool bIsLearnAbilityLeaderDown =false;
 	void HandleAbilityInput(const FInputActionValue& AbilityInputValue,ECAbilityInputId AbilityInputId);
 
 	void SetInputEnableFromPlayerController(bool bEnable);

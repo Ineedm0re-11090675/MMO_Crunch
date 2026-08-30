@@ -90,9 +90,10 @@ void UGA_Combo::HandleInputPress(float TimeWaited)
 
 void UGA_Combo::HandleTargetGroupReceive(FGameplayEventData Data)
 {
-	TArray<FHitResult> HitResults = GetHitResultsFromSweepLocationTargetData(Data.TargetData,TargetSweepSphereRadius);  
-	for (const FHitResult& HitResult : HitResults)
+	int HitTargetCount = UAbilitySystemBlueprintLibrary::GetDataCountFromTargetData(Data.TargetData);
+	for (int i = 0; i < HitTargetCount; i++)
 	{
+		FHitResult HitResult = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(Data.TargetData, i);
 		TSubclassOf<UGameplayEffect> GameplayEffect = GetCurrentComboDamageEffect();
 		ApplyGameplayEffectToHitResultActor(HitResult,GameplayEffect,GetAbilityLevel(CurrentSpecHandle,CurrentActorInfo));
 	}

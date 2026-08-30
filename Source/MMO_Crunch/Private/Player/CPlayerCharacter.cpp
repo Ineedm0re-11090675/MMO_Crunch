@@ -56,6 +56,9 @@ void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACPlayerCharacter::Jump);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACPlayerCharacter::HandleLook);
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACPlayerCharacter::HandleMove);
+
+		EnhancedInputComponent->BindAction(UpgradeAbilityAction,ETriggerEvent::Started,this,&ACPlayerCharacter::LearnAbilityLeaderDown);
+		EnhancedInputComponent->BindAction(UpgradeAbilityAction,ETriggerEvent::Completed,this,&ACPlayerCharacter::LearnAbilityLeaderUp);
 		for (const TPair<ECAbilityInputId, UInputAction*>& InputActionPair : GameplayAbilityInputAction)
 		{
 			EnhancedInputComponent->BindAction(InputActionPair.Value, ETriggerEvent::Triggered, this,
@@ -80,6 +83,16 @@ void ACPlayerCharacter::HandleMove(const FInputActionValue& MoveActionValue)
 	AddMovementInput(GetMoveForwardVector() * InputValue.Y + GetLookRightVector() * InputValue.X);
 }
 
+void ACPlayerCharacter::LearnAbilityLeaderDown(const FInputActionValue& MoveActionValue)
+{
+	bIsLearnAbilityLeaderDown = true;
+}
+
+void ACPlayerCharacter::LearnAbilityLeaderUp(const FInputActionValue& MoveActionValue)
+{
+	bIsLearnAbilityLeaderDown = false;  
+}
+
 void ACPlayerCharacter::HandleAbilityInput(const FInputActionValue& AbilityInputValue,
                                            ECAbilityInputId AbilityInputId)
 {
@@ -101,6 +114,11 @@ void ACPlayerCharacter::HandleAbilityInput(const FInputActionValue& AbilityInput
 
 		需要绑定：Character ，ASC
 	 */
+	if (bPressed && bIsLearnAbilityLeaderDown)
+	{
+		UpgradeAbilityWithInputID(AbilityInputId);
+		return;
+	}
 	if (bPressed)
 	{
 		GetAbilitySystemComponent()->AbilityLocalInputPressed((int32)AbilityInputId);
@@ -158,13 +176,14 @@ void ACPlayerCharacter::OnRecoveryFromStun()
 
 void ACPlayerCharacter::OnAimChange(bool bIsAiming)
 {
+	if (!IsLocallyControlled())return;
 	LerpCameraToLocalOffsetLocation(bIsAiming?CameraAimLocalOffset:FVector{0.f});
 }
 
 void ACPlayerCharacter::LerpCameraToLocalOffsetLocation(const FVector& Goal)
 {
 	GetWorldTimerManager().ClearTimer(CameraLerpTimerHandle);
-	GetWorldTimerManager().SetTimerForNextTick(FTimerDelegate::CreateUObject(this,&ACPlayerCharacter::TickCameraLocalOffset,Goal));
+	CameraLerpTimerHandle = GetWorldTimerManager().SetTimerForNextTick(FTimerDelegate::CreateUObject(this,&ACPlayerCharacter::TickCameraLocalOffset,Goal));
 }
 
 void ACPlayerCharacter::TickCameraLocalOffset(FVector Goal)
@@ -180,7 +199,7 @@ void ACPlayerCharacter::TickCameraLocalOffset(FVector Goal)
 
 	FVector NewLocalOffset =FMath::Lerp(CurrentLocalOffset,Goal,LerpAlpha);
 	CameraComp->SetRelativeLocation(NewLocalOffset);
-	GetWorldTimerManager().SetTimerForNextTick(FTimerDelegate::CreateUObject(this,&ACPlayerCharacter::TickCameraLocalOffset,Goal));
+	CameraLerpTimerHandle=GetWorldTimerManager().SetTimerForNextTick(FTimerDelegate::CreateUObject(this,&ACPlayerCharacter::TickCameraLocalOffset,Goal));
 }
 
 

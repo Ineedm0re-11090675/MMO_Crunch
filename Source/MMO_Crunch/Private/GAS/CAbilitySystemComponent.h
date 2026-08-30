@@ -16,6 +16,11 @@ public:
 	void ApplyFullStatsEffect();
 
 	bool bIsMaxLevel() const ;
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_UpgradeAbilityWithID(ECAbilityInputId InputID);
+	UFUNCTION(CLient, Reliable)
+	void Client_AbilitySpecLevelUpdated(FGameplayAbilitySpecHandle Handle,int NewLevel);
 	
 	const TMap<ECAbilityInputId,TSubclassOf<UGameplayAbility>>& GetAbility() const ; 
 private:

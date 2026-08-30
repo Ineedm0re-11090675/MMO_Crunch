@@ -43,6 +43,7 @@ protected:
 	/*
 	 *UI
 	*/
+	void UpgradeAbilityWithInputID(ECAbilityInputId InputID);
 private:
 	UPROPERTY(VisibleDefaultsOnly,Category = "UI")
 	class UWidgetComponent* OverHeadWidget;
