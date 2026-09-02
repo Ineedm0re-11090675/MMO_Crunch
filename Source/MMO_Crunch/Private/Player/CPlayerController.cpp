@@ -1,6 +1,8 @@
 #include "CPlayerController.h"
 #include "CPlayerCharacter.h"
 #include "Net/UnrealNetwork.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 #include "Widget/GameplayWidget.h"
 void ACPlayerController::OnPossess(APawn* NewPawn)
 {
@@ -40,6 +42,23 @@ void ACPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 	DOREPLIFETIME(ACPlayerController, TeamId);
 }
 
+void ACPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+	UEnhancedInputLocalPlayerSubsystem* InputLocalPlayerSubsystem = GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+	if (InputLocalPlayerSubsystem)
+	{
+		InputLocalPlayerSubsystem->RemoveMappingContext(UIInputMapping);
+		InputLocalPlayerSubsystem->AddMappingContext(UIInputMapping, 1);
+	}
+	
+	UEnhancedInputComponent* EnhancedInputComponent  = Cast<UEnhancedInputComponent>(InputComponent);
+	if (EnhancedInputComponent)
+	{
+		EnhancedInputComponent->BindAction(ShopToggleInputAction,ETriggerEvent::Triggered,this,&ACPlayerController::ToggleShop);
+	}
+}
+
 void ACPlayerController::SpawnGameplayWidget()
 {
 	if (!IsLocalPlayerController()) return;
@@ -48,5 +67,13 @@ void ACPlayerController::SpawnGameplayWidget()
 	{
 		GameplayWidget->AddToViewport();
 		GameplayWidget->ConfigureAbility(CPlayerCharacter->GetAbility());
+	}
+}
+
+void ACPlayerController::ToggleShop()
+{
+	if (GameplayWidget)
+	{
+		GameplayWidget->ToggleShop();
 	}
 }

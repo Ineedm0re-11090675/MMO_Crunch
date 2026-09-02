@@ -3,6 +3,7 @@
 #include "AbilityListView.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "ShopWidget.h"
 #include "ValueGauge.h"
 #include "GAS/CAbilitySystemComponent.h"
 #include "GAS/CGameplayAbilityTypes.h"
@@ -30,6 +31,68 @@ void UGameplayWidget::ConfigureAbility(
 	const TMap<ECAbilityInputId, TSubclassOf<class UGameplayAbility>>& Abilities)
 {
 	AbilityList->ConfigureAbility(Abilities);
+}
+
+void UGameplayWidget::ToggleShop()
+{
+	if (ShopWidget->GetVisibility() == ESlateVisibility::HitTestInvisible)
+	{
+		ShopWidget->SetVisibility(ESlateVisibility::Visible);
+		PlayShopPopupAnimation(true);
+		SetOwningPawnInputEnbaled(false);
+		SetShowMouseCursor(true);
+		SetFocusToGameAndUI();
+		ShopWidget->SetFocus();
+	}else
+	{
+		ShopWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
+		PlayShopPopupAnimation(false);
+		SetOwningPawnInputEnbaled(true);
+		SetShowMouseCursor(false);
+		SetFocusToGameOnly();
+	}
+}
+
+void UGameplayWidget::PlayShopPopupAnimation(bool bPlayForward)
+{
+	if (bPlayForward)
+	{
+		PlayAnimationForward(ShopPopupAnim);
+	}else
+	{
+		PlayAnimationReverse(ShopPopupAnim);
+	}
+}
+
+void UGameplayWidget::SetOwningPawnInputEnbaled(bool bPawnInputEnabled)
+{
+	if (bPawnInputEnabled)
+	{
+		//关闭Player的，不关闭UI的
+		GetOwningPlayerPawn()->EnableInput(GetOwningPlayer());
+	}else
+	{
+		GetOwningPlayerPawn()->DisableInput(GetOwningPlayer());
+	}
+}
+
+void UGameplayWidget::SetShowMouseCursor(bool bShowMouseCursor)
+{
+	GetOwningPlayer()->SetShowMouseCursor(bShowMouseCursor);
+}
+
+void UGameplayWidget::SetFocusToGameAndUI()
+{
+	FInputModeGameAndUI GameAndUIInputMode;
+	//捕捉鼠标动作时 显示光标
+	GameAndUIInputMode.SetHideCursorDuringCapture(false);
+	GetOwningPlayer()->SetInputMode(GameAndUIInputMode);
+}
+
+void UGameplayWidget::SetFocusToGameOnly()
+{
+	FInputModeGameOnly GameOnlyInputMode;
+	GetOwningPlayer()->SetInputMode(GameOnlyInputMode);
 }
 
 
