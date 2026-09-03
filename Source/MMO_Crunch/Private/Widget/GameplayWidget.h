@@ -26,6 +26,10 @@ private:
 
 	UPROPERTY(meta=(BindWidget))
 	class UShopWidget* ShopWidget;
+
+	UPROPERTY(meta=(BindWidget))
+	class UInventoryWidget* InventoryWidget;
+	
 	UPROPERTY(meta=(BindWidget))
 	class UStatsGauge* AttackAttribute;
 
@@ -43,7 +47,7 @@ private:
 	UPROPERTY(Transient,meta=(BindWidgetAnim))
 	UWidgetAnimation* ShopPopupAnim;
 	void PlayShopPopupAnimation(bool bPlayForward);
-	void SetOwningPawnInputEnbaled(bool bPawnInputEnabled);
+	void SetOwningPawnInputEnabled(bool bPawnInputEnabled);
 	void SetShowMouseCursor(bool bShowMouseCursor);
 	void SetFocusToGameAndUI();
 	void SetFocusToGameOnly();

@@ -39,7 +39,7 @@ void UGameplayWidget::ToggleShop()
 	{
 		ShopWidget->SetVisibility(ESlateVisibility::Visible);
 		PlayShopPopupAnimation(true);
-		SetOwningPawnInputEnbaled(false);
+		SetOwningPawnInputEnabled(false);
 		SetShowMouseCursor(true);
 		SetFocusToGameAndUI();
 		ShopWidget->SetFocus();
@@ -47,7 +47,7 @@ void UGameplayWidget::ToggleShop()
 	{
 		ShopWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
 		PlayShopPopupAnimation(false);
-		SetOwningPawnInputEnbaled(true);
+		SetOwningPawnInputEnabled(true);
 		SetShowMouseCursor(false);
 		SetFocusToGameOnly();
 	}
@@ -64,7 +64,7 @@ void UGameplayWidget::PlayShopPopupAnimation(bool bPlayForward)
 	}
 }
 
-void UGameplayWidget::SetOwningPawnInputEnbaled(bool bPawnInputEnabled)
+void UGameplayWidget::SetOwningPawnInputEnabled(bool bPawnInputEnabled)
 {
 	if (bPawnInputEnabled)
 	{
