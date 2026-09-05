@@ -2,6 +2,8 @@
 
 #include "AbilitySystemComponent.h"
 #include "PA_ShopItem.h"
+#include "GAS/CAbilitySystemStatics.h"
+#include "GAS/CAttributeSet.h"
 
 FInventoryItemHandle::FInventoryItemHandle()
 	:HandleId{GetInvalidId()}
@@ -97,62 +99,61 @@ bool UInventoryItem::IsValid() const
 	return ShopItem != nullptr;
 }
 
-void UInventoryItem::InitItem(const FInventoryItemHandle& NewHandle, const UPA_ShopItem* NewShopItem)
+void UInventoryItem::InitItem(const FInventoryItemHandle& NewHandle, const UPA_ShopItem* NewShopItem,UAbilitySystemComponent* AbilitySystemComponent)
 {
 	Handle = NewHandle;
 	ShopItem = NewShopItem;
+	OwnerAbilitySystemComponent = AbilitySystemComponent;
+	if (OwnerAbilitySystemComponent)
+	{
+		OwnerAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetManaAttribute()).AddUObject(this,&UInventoryItem::ManaUpdated);
+	}
+	ApplyGASModification();
 }
 
-void UInventoryItem::ApplyGASModification(UAbilitySystemComponent* AbilitySystemComponent)
+void UInventoryItem::ApplyGASModification()
 {
-	if (!ShopItem || !AbilitySystemComponent)
+	if (!ShopItem || !OwnerAbilitySystemComponent)
 	{
 		return;
 	}
-	if (!AbilitySystemComponent->GetOwner() || !AbilitySystemComponent->GetOwner()->HasAuthority())
+	if (!OwnerAbilitySystemComponent->GetOwner() || !OwnerAbilitySystemComponent->GetOwner()->HasAuthority())
 	{
 		return;
 	}
 	TSubclassOf<UGameplayEffect> EquippedEffect = GetShopItem()->GetEquippedEffect(); 
 	if (EquippedEffect)
 	{
-		ApplyEquippedEffectHandle =AbilitySystemComponent->BP_ApplyGameplayEffectToSelf(EquippedEffect,1,AbilitySystemComponent->MakeEffectContext());
+		ApplyEquippedEffectHandle =OwnerAbilitySystemComponent->BP_ApplyGameplayEffectToSelf(EquippedEffect,1,OwnerAbilitySystemComponent->MakeEffectContext());
 	}
 	TSubclassOf<UGameplayAbility> GrantedAbility =  GetShopItem()->GetGrantedAbility();
 	if (GrantedAbility)
 	{
-		const FGameplayAbilitySpec* FoundSpec = AbilitySystemComponent->FindAbilitySpecFromClass(GrantedAbility);
-		if (FoundSpec)
-		{
-			GrantedAbilitySpecHandle = FoundSpec->Handle;
-		}else
-		{
-			GrantedAbilitySpecHandle = AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(GrantedAbility));
-		}
+		GrantedAbilitySpecHandle = OwnerAbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(GrantedAbility));
 	}
 }
 
-bool UInventoryItem::TryActivateGrantedAbility(UAbilitySystemComponent* AbilitySystemComponent)
+bool UInventoryItem::TryActivateGrantedAbility()
 {
 	if (!GrantedAbilitySpecHandle.IsValid())
 	{
 		return false;
 	}
-	if (AbilitySystemComponent && AbilitySystemComponent->TryActivateAbility(GrantedAbilitySpecHandle))
+	if (OwnerAbilitySystemComponent && OwnerAbilitySystemComponent->TryActivateAbility(GrantedAbilitySpecHandle))
 	{
 		return true;
 	}
 	return false;
 }
 
-void UInventoryItem::ApplyConsumeEffect(UAbilitySystemComponent* AbilitySystemComponent)
+void UInventoryItem::ApplyConsumeEffect()
 {
 	if (!ShopItem) return;
 
 	TSubclassOf<UGameplayEffect> ConsumeEffect = ShopItem->GetConsumeEffect();
 	if (!ConsumeEffect) return;
 
-	AbilitySystemComponent->BP_ApplyGameplayEffectToSelf(ConsumeEffect,1,AbilitySystemComponent->MakeEffectContext());
+	OwnerAbilitySystemComponent->BP_ApplyGameplayEffectToSelf(ConsumeEffect,1,OwnerAbilitySystemComponent->MakeEffectContext());
 }
 
 void UInventoryItem::SetSlotNumber(int NewSlotNumber)
@@ -160,19 +161,74 @@ void UInventoryItem::SetSlotNumber(int NewSlotNumber)
 	SlotNumber = NewSlotNumber;
 }
 
-void UInventoryItem::RemoveGASModification(UAbilitySystemComponent* AbilitySystemComponent)
+void UInventoryItem::RemoveGASModification()
 {
-	if (!AbilitySystemComponent)
+	if (!OwnerAbilitySystemComponent)
 	{
 		return;
 	}
-	//这种留下回执的形式很方便后续消除处理
-	if (ApplyEquippedEffectHandle.IsValid())
+
+	//由于UE自动清理指针有一段真空期，这段时间内我们不希望蓝量更改被监听，所以我们手动Remove
+	OwnerAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetManaAttribute()).RemoveAll(this);
+	if (OwnerAbilitySystemComponent->GetOwner()->HasAuthority())
 	{
-		AbilitySystemComponent->RemoveActiveGameplayEffect(ApplyEquippedEffectHandle);
+		//这种留下回执的形式很方便后续消除处理
+		if (ApplyEquippedEffectHandle.IsValid())
+		{
+			OwnerAbilitySystemComponent->RemoveActiveGameplayEffect(ApplyEquippedEffectHandle);
+		}
+		if (GrantedAbilitySpecHandle.IsValid())
+		{
+			OwnerAbilitySystemComponent->SetRemoveAbilityOnEnd(GrantedAbilitySpecHandle);
+		}
 	}
-	if (GrantedAbilitySpecHandle.IsValid())
+
+}
+
+bool UInventoryItem::IsGrantingAbility(TSubclassOf<UGameplayAbility> AbilityClass) const
+{
+	if (!ShopItem) return false;
+	TSubclassOf<UGameplayAbility> GrantedAbility = ShopItem->GetGrantedAbility();
+	return GrantedAbility == AbilityClass;
+}
+
+bool UInventoryItem::IsGrantingAnyAbility() const
+{
+	if (!ShopItem) return false;
+
+	return ShopItem->GetGrantedAbility() != nullptr;
+}
+
+float UInventoryItem::GetAbilityCooldownTimeRemaining() const
+{
+	return UCAbilitySystemStatics::GetCooldownRemainingFor(GetShopItem()->GetGrantedAbilityCOD(),*OwnerAbilitySystemComponent);
+}
+
+float UInventoryItem::GetAbilityCooldownTimeDuration() const
+{
+	return UCAbilitySystemStatics::GetCooldownDurationFor(GetShopItem()->GetGrantedAbilityCOD(),*OwnerAbilitySystemComponent,1); 
+}
+
+float UInventoryItem::GetAbilityManaCost() const
+{
+	return UCAbilitySystemStatics::GetManaCostFor(GetShopItem()->GetGrantedAbilityCOD(),*OwnerAbilitySystemComponent,1);
+}
+
+bool UInventoryItem::CanCastAbility() const
+{
+	if (!IsGrantingAnyAbility() || !OwnerAbilitySystemComponent)
+		return false;
+
+	FGameplayAbilitySpec* Spec = OwnerAbilitySystemComponent->FindAbilitySpecFromHandle(GrantedAbilitySpecHandle);
+	if (Spec)
 	{
-		AbilitySystemComponent->SetRemoveAbilityOnEnd(GrantedAbilitySpecHandle);
+		return UCAbilitySystemStatics::CheckAbilityCost(*Spec, *OwnerAbilitySystemComponent);
 	}
+
+	return UCAbilitySystemStatics::CheckAbilityCost(FGameplayAbilitySpec(GetShopItem()->GetGrantedAbilityCOD()), *OwnerAbilitySystemComponent);
+}
+
+void UInventoryItem::ManaUpdated(const FOnAttributeChangeData& Data)
+{
+	OnAbilityCanCastUpdated.Broadcast(CanCastAbility());
 }

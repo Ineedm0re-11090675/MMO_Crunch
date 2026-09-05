@@ -1,6 +1,7 @@
 #include "InventoryItemWidget.h"
 
 #include "ItemToolTip.h"
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Inventory/InventoryItem.h"
 #include "Inventory/PA_ShopItem.h"
@@ -13,6 +14,7 @@ void UInventoryItemWidget::NativeConstruct()
 
 void UInventoryItemWidget::UpdateInventoryItem(const UInventoryItem* Item)
 {
+	UnBindCanCastAbilityDelegate();
 	InventoryItem = Item;
 	if (!InventoryItem || !InventoryItem->IsValid() || InventoryItem->GetStackCount() <=0)
 	{
@@ -34,6 +36,33 @@ void UInventoryItemWidget::UpdateInventoryItem(const UInventoryItem* Item)
 		StackCountText->SetVisibility(ESlateVisibility::Hidden);
 	}
 
+	ClearCooldown();
+	if (InventoryItem->IsGrantingAnyAbility())
+	{
+		UpdateCanCastDisplay(InventoryItem->CanCastAbility());
+		float AbilityCooldownRemaining = InventoryItem->GetAbilityCooldownTimeRemaining();
+		float AbilityCooldownDuration = InventoryItem->GetAbilityCooldownTimeDuration();
+
+		if (AbilityCooldownRemaining > KINDA_SMALL_NUMBER &&
+			AbilityCooldownDuration > KINDA_SMALL_NUMBER)
+		{
+			StartCooldown(AbilityCooldownRemaining, AbilityCooldownDuration);
+		}
+		float AbilityCost = InventoryItem->GetAbilityManaCost();
+		ManaCostText->SetVisibility(AbilityCost == 0.f ? ESlateVisibility::Hidden : ESlateVisibility::Visible);
+		ManaCostText->SetText(FText::AsNumber(AbilityCost));
+
+		CooldownDurationText->SetVisibility(AbilityCooldownDuration == 0.f? ESlateVisibility::Hidden : ESlateVisibility::Visible);
+		CooldownDurationText->SetText(FText::AsNumber(AbilityCooldownDuration));
+		BindCanCastAbilityDelegate();
+	}
+	else
+	{
+		UpdateCanCastDisplay(true);
+		ManaCostText->SetVisibility(ESlateVisibility::Hidden);
+		CooldownDurationText->SetVisibility(ESlateVisibility::Hidden);
+		CooldownCountText->SetVisibility(ESlateVisibility::Hidden);
+	}
 }
 
 void UInventoryItemWidget::SetSlotNumber(int NewSlotNumber)
@@ -48,6 +77,8 @@ bool UInventoryItemWidget::IsEmpty() const
 
 void UInventoryItemWidget::EmptySlot()
 {
+	ClearCooldown();
+	UnBindCanCastAbilityDelegate();
 	InventoryItem = nullptr;
 	SetIcon(EmptyTexture);
 	SetToolTip(nullptr);
@@ -82,6 +113,11 @@ FInventoryItemHandle UInventoryItemWidget::GetInventoryItemHandle() const
 		return InventoryItem->GetHandle(); 
 	}
 	return FInventoryItemHandle::InvalidHandle();
+}
+
+void UInventoryItemWidget::UpdateCanCastDisplay(bool bCanCast)
+{
+	GetItemIcon()->GetDynamicMaterial()->SetScalarParameterValue(CanCastDynamicMaterialParaName,bCanCast?1.f:0.f);
 }
 
 void UInventoryItemWidget::OnLeftButtonClicked()
@@ -131,4 +167,68 @@ bool UInventoryItemWidget::NativeOnDrop(const FGeometry& InGeometry, const FDrag
 		}
 	}
 	return Super::NativeOnDrop(InGeometry, InDragDropEvent, InOperation);
+}
+
+void UInventoryItemWidget::StartCooldown(float CooldownRemaining, float CooldownDuration)
+{
+	CooldownTimeDuration = CooldownDuration;
+	CooldownTimeRemaining = CooldownRemaining;
+
+	GetWorld()->GetTimerManager().SetTimer(CooldownDurationTimerHandle,this,&UInventoryItemWidget::CooldownFinished,CooldownTimeRemaining);
+	GetWorld()->GetTimerManager().SetTimer(CooldownUpdateTimerHandle,this,&UInventoryItemWidget::UpdateCooldown,CooldownUpdateInterval,true,0.f);
+
+	CooldownCountText->SetVisibility(ESlateVisibility::Visible);
+}
+
+void UInventoryItemWidget::BindCanCastAbilityDelegate()
+{
+	if (InventoryItem)
+	{
+		const_cast<UInventoryItem*>(InventoryItem)->OnAbilityCanCastUpdated.AddUObject(this,&UInventoryItemWidget::UpdateCanCastDisplay);
+	}
+}
+
+void UInventoryItemWidget::UnBindCanCastAbilityDelegate()
+{
+	if (InventoryItem)
+	{
+		const_cast<UInventoryItem*>(InventoryItem)->OnAbilityCanCastUpdated.RemoveAll(this);
+	}
+}
+
+void UInventoryItemWidget::CooldownFinished()
+{
+	GetWorld()->GetTimerManager().ClearTimer(CooldownUpdateTimerHandle);
+	CooldownCountText->SetVisibility(ESlateVisibility::Hidden);
+	if (GetItemIcon())
+	{
+		GetItemIcon()->GetDynamicMaterial()->SetScalarParameterValue(CooldownAmtDynamicMaterialParaName,1.f);
+	}
+}
+
+void UInventoryItemWidget::ClearCooldown()
+{
+	CooldownFinished();
+}
+
+void UInventoryItemWidget::SetIcon(UTexture2D* Icon)
+{
+	if (GetItemIcon())
+	{
+		GetItemIcon()->GetDynamicMaterial()->SetTextureParameterValue(IconTextureDynamicMaterialParaName,Icon);
+		return;
+	}
+	Super::SetIcon(Icon);
+}
+
+void UInventoryItemWidget::UpdateCooldown()
+{
+	CooldownTimeRemaining -= CooldownUpdateInterval;
+	const float CooldownAmt = 1.f-CooldownTimeRemaining/CooldownTimeDuration;
+	CooldownDisplayFormattingOptions.MaximumFractionalDigits = CooldownTimeRemaining >1.f ? 0:2;
+	CooldownCountText->SetText(FText::AsNumber(CooldownTimeRemaining,&CooldownDisplayFormattingOptions));
+	if (GetItemIcon())
+	{
+		GetItemIcon()->GetDynamicMaterial()->SetScalarParameterValue(CooldownAmtDynamicMaterialParaName,CooldownAmt);
+	}
 }

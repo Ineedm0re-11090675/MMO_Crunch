@@ -49,6 +49,10 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* MoveAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* UseInventoryItemAction;
+	
 	
 	void HandleLook(const FInputActionValue& LookActionValue);
 	void HandleMove(const FInputActionValue& MoveActionValue);
@@ -56,7 +60,8 @@ private:
 	void LearnAbilityLeaderUp(const FInputActionValue& MoveActionValue);
 	bool bIsLearnAbilityLeaderDown =false;
 	void HandleAbilityInput(const FInputActionValue& AbilityInputValue,ECAbilityInputId AbilityInputId);
-
+	void UseInventoryItem(const FInputActionValue& InputValue);
+	
 	void SetInputEnableFromPlayerController(bool bEnable);
 	/*
 	 *Death && Respawn

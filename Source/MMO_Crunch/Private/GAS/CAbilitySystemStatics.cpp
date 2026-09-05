@@ -156,7 +156,7 @@ float UCAbilitySystemStatics::GetManaCostFor(const UGameplayAbility* AbilityCOD,
 	return FMath::Abs(ManaCost);
 }
 
-float UCAbilitySystemStatics::GetCooldownFor(const UGameplayAbility* AbilityCOD, const UAbilitySystemComponent& OwnASC,
+float UCAbilitySystemStatics::GetCooldownDurationFor(const UGameplayAbility* AbilityCOD, const UAbilitySystemComponent& OwnASC,
 	int Level)
 {
 	float Cooldown = 0.f;

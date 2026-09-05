@@ -1,10 +1,13 @@
 #include "InventoryWidget.h"
 
 #include "InventoryItemWidget.h"
+#include "Blueprint/SlateBlueprintLibrary.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/WrapBox.h"
 #include "Components/WrapBoxSlot.h"
 #include "Inventory/InventoryComponent.h"
-
+#include "Kismet/GameplayStatics.h"
+#include "Widget/InventoryContextMenuWidget.h"
 
 void UInventoryWidget::NativeConstruct()
 {
@@ -14,13 +17,23 @@ void UInventoryWidget::NativeConstruct()
 		InventoryComponent =OwnerPawn->GetComponentByClass<UInventoryComponent>();
 		if (InventoryComponent)
 		{
+
+			InventoryComponent->OnInventoryAdded.RemoveAll(this);
+			InventoryComponent->OnItemStackCountChange.RemoveAll(this);
+			InventoryComponent->OnItemRemoved.RemoveAll(this);
+			InventoryComponent->OnItemAbilityCommitted.RemoveAll(this);
+			
 			InventoryComponent->OnInventoryAdded.AddUObject(this,&UInventoryWidget::ItemAdded);
 			InventoryComponent->OnItemStackCountChange.AddUObject(this,&UInventoryWidget::ItemStackCountChanged);
 			InventoryComponent->OnItemRemoved.AddUObject(this,&UInventoryWidget::ItemRemoved);
+			InventoryComponent->OnItemAbilityCommitted.AddUObject(this,&UInventoryWidget::ItemAbilityCommitted);
 			int Capacity = InventoryComponent->GetCapacity();
 
 			ItemList->ClearChildren();
-
+			// Codex建议：清理旧的槽位指针和 Handle 映射
+			ItemWidgets.Empty();
+			PopulatedItemEntryWidgets.Empty();
+			
 			for (int i = 0; i < Capacity; ++i)
 			{
 				UInventoryItemWidget* NewEmptyWidget = CreateWidget<UInventoryItemWidget>(GetOwningPlayer(),ItemWidgetClass);
@@ -33,16 +46,110 @@ void UInventoryWidget::NativeConstruct()
 
 					NewEmptyWidget->OnInventoryItemDropped.AddUObject(this,&UInventoryWidget::HandleItemDragDrop);
 					NewEmptyWidget->OnLeftClicked.AddUObject(InventoryComponent,&UInventoryComponent::TryActivateItem);
-					
+					NewEmptyWidget->OnRightClicked.AddUObject(this,&UInventoryWidget::ToggleContextMenu);
 				}
 			}
+			SpawnContextMenuWidget();
 		}
 	}
+}
+
+void UInventoryWidget::NativeOnFocusChanging(const FWeakWidgetPath& PreviousFocusPath, const FWidgetPath& NewWidgetPath,
+	const FFocusEvent& InFocusEvent)
+{
+	Super::NativeOnFocusChanging(PreviousFocusPath, NewWidgetPath, InFocusEvent);
+	if (!NewWidgetPath.ContainsWidget(ContextMenuWidget->GetCachedWidget().Get()))
+	{
+		ClearContextMenu();
+	}
+
+}
+
+
+void UInventoryWidget::SpawnContextMenuWidget()
+{
+	if (!ContextMenuWidgetClass) return;
+	ContextMenuWidget = CreateWidget<UInventoryContextMenuWidget>(this,ContextMenuWidgetClass);
+	if (ContextMenuWidget)
+	{
+		 ContextMenuWidget->GetSellButtonClickedEvent().AddDynamic(this,&UInventoryWidget::SellFocusedItem);
+		ContextMenuWidget->GetUseButtonClickedEvent().AddDynamic(this,&UInventoryWidget::UseFocusedItem);
+		ContextMenuWidget->AddToViewport(1);
+		SetContextMenuVisible(false);
+		
+	}
+}
+
+void UInventoryWidget::SellFocusedItem()
+{
+	InventoryComponent->SellItem(CurrentFocusedItemHandle);
+	SetContextMenuVisible(false);
+}
+
+void UInventoryWidget::UseFocusedItem()
+{
+	InventoryComponent->TryActivateItem(CurrentFocusedItemHandle);
+	SetContextMenuVisible(false);
+}
+
+void UInventoryWidget::ToggleContextMenu(const FInventoryItemHandle& Handle)
+{
+	if (CurrentFocusedItemHandle == Handle)
+	{
+		ClearContextMenu();
+	}
+	CurrentFocusedItemHandle = Handle;
+	UInventoryItemWidget** ItemWidgetPtrPtr =PopulatedItemEntryWidgets.Find(Handle);
+	if (!ItemWidgetPtrPtr) return;
+	UInventoryItemWidget* ItemWidget = *ItemWidgetPtrPtr;
+	if (!ItemWidget) return;
+
+	SetContextMenuVisible(true);
+	FVector2D ItemAbsPos = ItemWidget->GetCachedGeometry().GetAbsolutePositionAtCoordinates(FVector2D{1.f,0.5f});
+
+	FVector2D ItemWidgetPixelPos,ItemWidgetViewportPos;
+	USlateBlueprintLibrary::AbsoluteToViewport(this,ItemAbsPos,ItemWidgetPixelPos,ItemWidgetViewportPos);
+
+
+	APlayerController* PlayerController = GetOwningPlayer();
+	if (PlayerController)
+	{
+		int ViewportSizeX, ViewportSizeY;
+		PlayerController->GetViewportSize(ViewportSizeX, ViewportSizeY);
+		float Scale =UWidgetLayoutLibrary::GetViewportScale(this);
+
+		int Overshoot = ItemWidgetPixelPos.Y + ContextMenuWidget->GetDesiredSize().Y * Scale - ViewportSizeY;
+		if (Overshoot > 0)
+		{
+			ItemWidgetPixelPos.Y-=Overshoot;
+		}
+	}
+
+	ContextMenuWidget->SetPositionInViewport(ItemWidgetPixelPos);
+}
+
+void UInventoryWidget::SetContextMenuVisible(bool bContextMenuVisible)
+{
+	if (ContextMenuWidget)
+	{
+		ContextMenuWidget->SetVisibility(bContextMenuVisible ? ESlateVisibility::Visible : ESlateVisibility::Hidden); 
+	}
+}
+
+void UInventoryWidget::ClearContextMenu()
+{
+	ContextMenuWidget->SetVisibility(ESlateVisibility::Hidden);
+	CurrentFocusedItemHandle = FInventoryItemHandle::InvalidHandle();
 }
 
 void UInventoryWidget::ItemAdded(const UInventoryItem* InventoryItem)
 {
 	if (!InventoryItem)
+	{
+		return;
+	}
+	// Codex建议：同一个物品 Handle 不允许重复占用库存槽位
+	if (PopulatedItemEntryWidgets.Contains(InventoryItem->GetHandle()))
 	{
 		return;
 	}
@@ -75,6 +182,16 @@ void UInventoryWidget::ItemRemoved(const FInventoryItemHandle& Handle)
 	{
 		(*FoundWidget)->EmptySlot();
 		PopulatedItemEntryWidgets.Remove(Handle);
+	}
+}
+
+void UInventoryWidget::ItemAbilityCommitted(const FInventoryItemHandle& Handle, float CooldownRemaining,
+	float CooldownDuration)
+{
+	UInventoryItemWidget** FoundWidget = PopulatedItemEntryWidgets.Find(Handle);
+	if (FoundWidget)
+	{
+		(*FoundWidget)->StartCooldown(CooldownRemaining,CooldownDuration);
 	}
 }
 

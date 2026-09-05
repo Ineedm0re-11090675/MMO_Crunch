@@ -1,5 +1,5 @@
 #include "PA_ShopItem.h"
-
+#include "Abilities/GameplayAbility.h"
 FItemCollection::FItemCollection()
 	:Items{}
 {
@@ -42,4 +42,14 @@ FPrimaryAssetType UPA_ShopItem::GetPrimaryAssetType()
 UTexture2D* UPA_ShopItem::GetItemTexture() const
 {
 	return Icon.LoadSynchronous();
+}
+
+UGameplayAbility* UPA_ShopItem::GetGrantedAbilityCOD() const
+{
+	if (GrantedAbility)
+	{
+		return Cast<UGameplayAbility>(GrantedAbility->GetDefaultObject());
+	}
+
+	return nullptr;
 }

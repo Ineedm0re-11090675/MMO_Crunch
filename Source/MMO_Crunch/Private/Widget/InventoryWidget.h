@@ -9,7 +9,7 @@
 #include "InventoryWidget.generated.h"
 
 class UInventoryItem;
-
+class UInventoryContextMenuWidget;
 class UInventoryItemWidget;
 UCLASS()
 class UInventoryWidget : public UUserWidget
@@ -18,7 +18,23 @@ class UInventoryWidget : public UUserWidget
 
 public:
 	virtual void NativeConstruct() override;
+	virtual void NativeOnFocusChanging(const FWeakWidgetPath& PreviousFocusPath, const FWidgetPath& NewWidgetPath, const FFocusEvent& InFocusEvent) override;
 private:
+	UPROPERTY(EditAnywhere,Category = "Inventory")
+	TSubclassOf<UInventoryContextMenuWidget> ContextMenuWidgetClass;
+
+	UPROPERTY()
+	UInventoryContextMenuWidget* ContextMenuWidget;
+
+	void SpawnContextMenuWidget();
+	UFUNCTION()
+	void SellFocusedItem();
+	UFUNCTION()
+	void UseFocusedItem();
+	void ToggleContextMenu(const FInventoryItemHandle& Handle);
+	void SetContextMenuVisible(bool bContextMenuVisible);
+	void ClearContextMenu(); 
+	FInventoryItemHandle CurrentFocusedItemHandle;
 	UPROPERTY(meta=(BindWidget))
 	class UWrapBox* ItemList;
 	
@@ -37,6 +53,7 @@ private:
 	void ItemAdded(const UInventoryItem* InventoryItem);
 	void ItemStackCountChanged(const FInventoryItemHandle& Handle, int NewCount);
 	void ItemRemoved(const FInventoryItemHandle& Handle);
+	void ItemAbilityCommitted(const FInventoryItemHandle& Handle,float CooldownRemaining,float CooldownDuration);
 
 	UInventoryItemWidget* GetNextAvailableWidget()const;
 

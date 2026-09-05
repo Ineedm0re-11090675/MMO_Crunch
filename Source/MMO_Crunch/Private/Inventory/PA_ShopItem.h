@@ -45,6 +45,7 @@ public:
 	int GetMaxStackAmt() const{return MaxStackAmt;}
 	
 	const TArray<TSoftObjectPtr<UPA_ShopItem>>& GetIngredientItems() const {return IngredientItems;}
+	UGameplayAbility* GetGrantedAbilityCOD()const;
 private:
 	UPROPERTY(EditDefaultsOnly,Category = "Shop Item")
 	TSoftObjectPtr<UTexture2D> Icon;
@@ -68,7 +69,7 @@ private:
 	TSubclassOf<UGameplayEffect> ConsumeEffect;
 	
 	UPROPERTY(EditDefaultsOnly,Category = "Shop Item")
-	TSubclassOf<class UGameplayAbility> GrantedAbility;
+	TSubclassOf<UGameplayAbility> GrantedAbility;
 	
 	UPROPERTY(EditDefaultsOnly,Category = "Shop Item")
 	bool bIsStackable =false;

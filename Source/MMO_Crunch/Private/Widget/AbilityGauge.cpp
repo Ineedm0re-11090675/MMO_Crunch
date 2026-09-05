@@ -51,8 +51,9 @@ void UAbilityGauge::NativeConstruct()
 		}
 		 
 	}
- 
+
 	OwningASC =OwnASC;
+
 	WholeNumericFormattingOptions.MaximumFractionalDigits =0;
 	TwoDigitNumberFormattingOptions.MaximumFractionalDigits =2;
 	
@@ -132,7 +133,7 @@ void UAbilityGauge::AbilitySpecUpdated(const FGameplayAbilitySpec& Spec)
 	LevelGauge->GetDynamicMaterial()->SetScalarParameterValue(AbilityLevelParaName,Spec.Level);
 	UpdateCanCast();
 
-	 float NewCooldownDuration = UCAbilitySystemStatics::GetCooldownFor(Spec.Ability,*OwningASC,Spec.Level);
+	 float NewCooldownDuration = UCAbilitySystemStatics::GetCooldownDurationFor(Spec.Ability,*OwningASC,Spec.Level);
 	 float NewCost =UCAbilitySystemStatics::GetManaCostFor(Spec.Ability,*OwningASC,Spec.Level);
 
 	CooldownDurationText->SetText(FText::AsNumber(NewCooldownDuration) );

@@ -66,6 +66,7 @@ void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 			EnhancedInputComponent->BindAction(InputActionPair.Value, ETriggerEvent::Triggered, this,
 			                                   &ACPlayerCharacter::HandleAbilityInput, InputActionPair.Key);
 		}
+		EnhancedInputComponent->BindAction(UseInventoryItemAction, ETriggerEvent::Triggered, this,&ACPlayerCharacter::UseInventoryItem);
 	}
 }
 
@@ -136,6 +137,12 @@ void ACPlayerCharacter::HandleAbilityInput(const FInputActionValue& AbilityInput
 		Server_SendGameplayEventToSelf(UCAbilitySystemStatics::GetBasicAttackPressedTag(),FGameplayEventData());
 		
 	}
+}
+
+void ACPlayerCharacter::UseInventoryItem(const FInputActionValue& InputValue)
+{
+	int Value = FMath::RoundToInt(InputValue.Get<float>());
+	InventoryComponent->TryActivateItemInSlot(Value-1);
 }
 
 void ACPlayerCharacter::SetInputEnableFromPlayerController(bool bEnable)

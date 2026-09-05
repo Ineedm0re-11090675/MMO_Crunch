@@ -16,9 +16,10 @@ public:
 	virtual void SetIcon(UTexture2D* Icon);
 protected:
 	UItemToolTip* SetToolTipWidget(const UPA_ShopItem* Item);
+	class UImage* GetItemIcon() const {return ItemIcon;};
 private:
 	UPROPERTY(meta = (BindWidget))
-	class UImage* ItemIcon;
+ 	UImage* ItemIcon;
  
 	UPROPERTY(EditDefaultsOnly,Category="ToolTip")
 	TSubclassOf<UItemToolTip> ItemToolTipClass; 
