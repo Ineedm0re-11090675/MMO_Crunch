@@ -34,6 +34,8 @@ private:
 	class UStatsGauge* AttackAttribute;
 
 	UPROPERTY(meta=(BindWidget))
+	class USkeletalMeshRenderWidget* HeadshotWidget;
+	UPROPERTY(meta=(BindWidget))
 	UStatsGauge* Armor;
 
 	UPROPERTY(meta=(BindWidget))
