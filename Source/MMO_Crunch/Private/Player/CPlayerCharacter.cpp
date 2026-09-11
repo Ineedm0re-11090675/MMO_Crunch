@@ -133,8 +133,9 @@ void ACPlayerCharacter::HandleAbilityInput(const FInputActionValue& AbilityInput
 	//上勾拳后，会block正常的combo，让这里触发combo 的press tag，这样可以做到连招而不是basic attack
 	if (AbilityInputId == ECAbilityInputId::BasicAttack)
 	{
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this,UCAbilitySystemStatics::GetBasicAttackPressedTag(),FGameplayEventData());
-		Server_SendGameplayEventToSelf(UCAbilitySystemStatics::GetBasicAttackPressedTag(),FGameplayEventData());
+		FGameplayTag BasicAttackTag = bPressed?UCAbilitySystemStatics::GetBasicAttackPressedTag() : UCAbilitySystemStatics::GetBasicAttackReleasedTag();
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this,BasicAttackTag,FGameplayEventData());
+		Server_SendGameplayEventToSelf(BasicAttackTag,FGameplayEventData());
 		
 	}
 }

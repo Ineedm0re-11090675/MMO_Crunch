@@ -62,9 +62,24 @@ void AStormCore::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyCh
 	}
 }
 
+float AStormCore::GetProgress() const
+{
+	FVector TeamTwoGoalLoc = TeamTwoGoal->GetActorLocation();
+	FVector VectorFromTeamOne = GetActorLocation() - TeamTwoGoalLoc;
+
+	VectorFromTeamOne.Z = 0.f;
+	return VectorFromTeamOne.Length() / TravelLength;
+}
+
 void AStormCore::BeginPlay()
 {
 	Super::BeginPlay();
+	FVector TeamOneGoalLoc = TeamOneGoal->GetActorLocation();
+	FVector TeamTwoGoalLoc = TeamTwoGoal->GetActorLocation();
+	FVector GoalOffset = TeamOneGoalLoc - TeamTwoGoalLoc;
+	GoalOffset.Z = 0.f;
+
+	TravelLength = GoalOffset.Length();
 }
 
 void AStormCore::PossessedBy(AController* NewController)

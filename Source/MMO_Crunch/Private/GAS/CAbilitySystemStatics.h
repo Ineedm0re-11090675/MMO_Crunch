@@ -18,6 +18,7 @@ public:
 	static FGameplayTag GetAimingStatsAbilityTag();
 	static FGameplayTag GetStunStatsAbilityTag();
 	static FGameplayTag GetBasicAttackPressedTag();
+	static FGameplayTag GetBasicAttackReleasedTag();
 	static FGameplayTag GetCameraShakeGameplayCueTag();
 	static FGameplayTag GetFullHealthStatsAbilityTag();
 	static FGameplayTag GetFullManaStatsAbilityTag();

@@ -56,7 +56,29 @@ void ACPlayerController::SetupInputComponent()
 	if (EnhancedInputComponent)
 	{
 		EnhancedInputComponent->BindAction(ShopToggleInputAction,ETriggerEvent::Triggered,this,&ACPlayerController::ToggleShop);
+		EnhancedInputComponent->BindAction(ToggleGameplayMenuAction,ETriggerEvent::Triggered,this, &ACPlayerController::ToggleGameplayMenu);
 	}
+}
+
+void ACPlayerController::MatchFinished(AActor* ViewTarget, int WinningTeam)
+{
+	if (!HasAuthority()) return;
+	
+	CPlayerCharacter->DisableInput(this);
+	Client_MatchFinished(ViewTarget,WinningTeam); 
+}
+
+void ACPlayerController::Client_MatchFinished_Implementation(AActor* ViewTarget, int WinningTeam)
+{
+	SetViewTargetWithBlend(ViewTarget,MatchFinishViewBlendTimeDuration);
+	FString ResultMsg = "You Win!";
+	if (GetGenericTeamId() != WinningTeam)
+	{
+		ResultMsg = "You Lose";
+	}
+	GameplayWidget->SetGameplayMenuTitle(ResultMsg);
+	FTimerHandle ShowWinLoseStateTimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(ShowWinLoseStateTimerHandle,this,&ACPlayerController::ShowWinLoseState,MatchFinishViewBlendTimeDuration);
 }
 
 void ACPlayerController::SpawnGameplayWidget()
@@ -75,5 +97,21 @@ void ACPlayerController::ToggleShop()
 	if (GameplayWidget)
 	{
 		GameplayWidget->ToggleShop();
+	} 
+}
+
+void ACPlayerController::ToggleGameplayMenu()
+{
+	if (GameplayWidget)
+	{
+		GameplayWidget->ToggleGameplayMene();
 	}
+}
+
+void ACPlayerController::ShowWinLoseState()
+{
+	if (GameplayWidget)
+	{
+		GameplayWidget->ShowGameplayMenu();
+	}	
 }

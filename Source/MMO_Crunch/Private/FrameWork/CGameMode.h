@@ -11,10 +11,16 @@ class  ACGameMode : public AGameModeBase
 	GENERATED_BODY()
 public:
 	virtual APlayerController* SpawnPlayerController(ENetRole InRemoteRole, const FString& Options) override;	
+	
+	virtual void StartPlay() override;
 private:
 	FGenericTeamId GetTeamIDForPlayerController(const APlayerController* PC) const;
 
 	AActor* FindNextStartSpotForTeam(const FGenericTeamId& TeamId) const;
 	UPROPERTY(EditDefaultsOnly,Category = "Team")
 	TMap<FGenericTeamId, FName> TeamStartSpotTagMap;
+
+	class AStormCore* GetStormCore() const ;
+
+	void MatchFinished(AActor* ViewTarget , int WinningTeam);
 };
