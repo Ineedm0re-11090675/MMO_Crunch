@@ -18,12 +18,16 @@ public:
 	static FGameplayTag GetAimingStatsAbilityTag();
 	static FGameplayTag GetStunStatsAbilityTag();
 	static FGameplayTag GetBasicAttackPressedTag();
+	static FGameplayTag GetBasicAttackReleasedTag();
 	static FGameplayTag GetCameraShakeGameplayCueTag();
 	static FGameplayTag GetFullHealthStatsAbilityTag();
 	static FGameplayTag GetFullManaStatsAbilityTag();
 	static FGameplayTag GetEmptyHealthStatsAbilityTag();
 	static FGameplayTag GetEmptyManaStatsAbilityTag();
+	static FGameplayTag GetCrossHairTag();
 	static bool IsHero(const AActor* ActorToCheck);
+	static bool ActorHasTag(const AActor* ActorToCheck,const FGameplayTag& TagToCheck);
+	static bool IsActorDead(const AActor* ActorToCheck);
 	static FGameplayTag GetHeroTag();
 	static FGameplayTag GetExpAttributeTag();
 	static FGameplayTag GetGoldAttributeTag();

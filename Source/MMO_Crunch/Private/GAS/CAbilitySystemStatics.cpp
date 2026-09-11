@@ -30,6 +30,11 @@ FGameplayTag UCAbilitySystemStatics::GetBasicAttackPressedTag()
 	return FGameplayTag::RequestGameplayTag("ability.basicAttack.pressed");
 }
 
+FGameplayTag UCAbilitySystemStatics::GetBasicAttackReleasedTag()
+{
+	return FGameplayTag::RequestGameplayTag("ability.basicAttack.released");
+}
+
 FGameplayTag UCAbilitySystemStatics::GetCameraShakeGameplayCueTag()
 {
 	return FGameplayTag::RequestGameplayTag("GameplayCue.hit.reaction"); 
@@ -55,15 +60,30 @@ FGameplayTag UCAbilitySystemStatics::GetEmptyManaStatsAbilityTag()
 	return FGameplayTag::RequestGameplayTag("stats.mana.empty");   
 }
 
+FGameplayTag UCAbilitySystemStatics::GetCrossHairTag()
+{
+	return FGameplayTag::RequestGameplayTag("stats.CrossHair");   
+}
+
 bool UCAbilitySystemStatics::IsHero(const AActor* ActorToCheck)
+{
+	return ActorHasTag(ActorToCheck,GetHeroTag());
+} 
+
+bool UCAbilitySystemStatics::ActorHasTag(const AActor* ActorToCheck, const FGameplayTag& TagToCheck)
 {
 	const IAbilitySystemInterface* ActorISA = Cast<IAbilitySystemInterface>(ActorToCheck);
 	UAbilitySystemComponent* ActorASC = ActorISA ? ActorISA->GetAbilitySystemComponent() : nullptr;
 	if (ActorASC)
 	{
-		return  ActorASC->HasMatchingGameplayTag(GetHeroTag());
+		return  ActorASC->HasMatchingGameplayTag(TagToCheck);
 	}
 	return false;
+}
+
+bool UCAbilitySystemStatics::IsActorDead(const AActor* ActorToCheck)
+{
+	return ActorHasTag(ActorToCheck,GetDeathStatsAbilityTag());
 }
 
 FGameplayTag UCAbilitySystemStatics::GetHeroTag()

@@ -13,8 +13,15 @@ public:
 	virtual void NativeConstruct() override;
 
 	void ConfigureAbility(const TMap<ECAbilityInputId,TSubclassOf<class UGameplayAbility>>& Abilities );
-
+	
 	void ToggleShop();
+
+	UFUNCTION()
+	void ToggleGameplayMene();
+	
+	void ShowGameplayMenu();
+
+	void SetGameplayMenuTitle(const FString& NewTitle);
 private:
 	UPROPERTY(meta=(BindWidget))
 	class UValueGauge* HealthBar;
@@ -29,12 +36,32 @@ private:
 
 	UPROPERTY(meta=(BindWidget))
 	class UInventoryWidget* InventoryWidget;
+
+	UPROPERTY(meta=(BindWidget))
+	class UMatchStatWidget* MatchStatWidget;
+
+	UPROPERTY(meta=(BindWidget))
+	class UGameplayMenu* GameplayMenu; 
+
+	UPROPERTY(meta=(BindWidget))
+	class UWidgetSwitcher* MainSwitcher;
+
+	UPROPERTY(meta=(BindWidget))
+	class UCanvasPanel* GameplayWidgetRootPanel;
+
+	UPROPERTY(meta=(BindWidget))
+	UCanvasPanel* GameplayMenuRootPanel;
 	
 	UPROPERTY(meta=(BindWidget))
 	class UStatsGauge* AttackAttribute;
 
 	UPROPERTY(meta=(BindWidget))
 	class USkeletalMeshRenderWidget* HeadshotWidget;
+
+	
+	UPROPERTY(meta=(BindWidget))
+	class UCrossHairWidget* CrossHairWidget;
+	
 	UPROPERTY(meta=(BindWidget))
 	UStatsGauge* Armor;
 

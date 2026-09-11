@@ -70,6 +70,12 @@ void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	}
 }
 
+void ACPlayerCharacter::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
+{
+	OutLocation = CameraComp->GetComponentLocation();
+	OutRotation = CameraComp->GetComponentRotation(); 
+}
+
 void ACPlayerCharacter::HandleLook(const FInputActionValue& LookActionValue)
 {
 	FVector2D InputValue = LookActionValue.Get<FVector2D>();
@@ -133,8 +139,9 @@ void ACPlayerCharacter::HandleAbilityInput(const FInputActionValue& AbilityInput
 	//上勾拳后，会block正常的combo，让这里触发combo 的press tag，这样可以做到连招而不是basic attack
 	if (AbilityInputId == ECAbilityInputId::BasicAttack)
 	{
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this,UCAbilitySystemStatics::GetBasicAttackPressedTag(),FGameplayEventData());
-		Server_SendGameplayEventToSelf(UCAbilitySystemStatics::GetBasicAttackPressedTag(),FGameplayEventData());
+		FGameplayTag BasicAttackTag = bPressed?UCAbilitySystemStatics::GetBasicAttackPressedTag() : UCAbilitySystemStatics::GetBasicAttackReleasedTag();
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this,BasicAttackTag,FGameplayEventData());
+		Server_SendGameplayEventToSelf(BasicAttackTag,FGameplayEventData());
 		
 	}
 }
@@ -185,7 +192,7 @@ void ACPlayerCharacter::OnRecoveryFromStun()
 
 void ACPlayerCharacter::OnAimChange(bool bIsAiming)
 {
-	if (!IsLocallyControlled())return;
+	// if (!IsLocallyControlled())return;
 	LerpCameraToLocalOffsetLocation(bIsAiming?CameraAimLocalOffset:FVector{0.f});
 }
 

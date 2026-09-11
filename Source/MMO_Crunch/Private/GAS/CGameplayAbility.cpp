@@ -26,6 +26,41 @@ bool UCGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle Hand
 	return Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags); 
 }
 
+AActor* UCGameplayAbility::GetAimTarget(float AimDistance, ETeamAttitude::Type TeamAttitude) const
+{
+	AActor* OwnAvatarActor = GetAvatarActorFromActorInfo();
+	if (OwnAvatarActor)
+	{
+		FVector Location;
+		FRotator Rotation;
+		OwnAvatarActor->GetActorEyesViewPoint(Location, Rotation);
+		FVector AimEndLoc = Location + Rotation.Vector() * AimDistance;
+		TArray<FHitResult> OutHitResults;
+		FCollisionQueryParams CollisionQueryParams;
+		CollisionQueryParams.AddIgnoredActor(OwnAvatarActor);
+
+		FCollisionObjectQueryParams CollisionObjectParams;
+		CollisionObjectParams.AddObjectTypesToQuery(ECC_Pawn);
+
+		if (ShouldDrawDebugSphere())
+		{
+			DrawDebugLine(GetWorld(),Location,AimEndLoc,FColor::Red,false,2.f,0U,3.f);
+		}
+		
+		if (GetWorld()->LineTraceMultiByObjectType(OutHitResults,Location,AimEndLoc,CollisionObjectParams,CollisionQueryParams))
+		{
+			for (const FHitResult& Hit : OutHitResults)
+			{
+				if (IsActorTeamAttitudeIs(Hit.GetActor(),TeamAttitude))
+				{
+					return Hit.GetActor();
+				}
+			}
+		}
+	}
+	return nullptr; 
+}
+
 
 UAnimInstance* UCGameplayAbility::GetOwnerAnimInstance() const
 {
@@ -125,6 +160,26 @@ void UCGameplayAbility::PushTargets(const FGameplayAbilityTargetDataHandle& Targ
 	PushTargets(Targets,PushForce);
 }
 
+void UCGameplayAbility::PlayMontageLocally(UAnimMontage* MontageToPlay)
+{
+	UAnimInstance* OwnerAnimInst = GetOwnerAnimInstance();
+	if (OwnerAnimInst && !OwnerAnimInst->Montage_IsPlaying(MontageToPlay))
+	{
+		OwnerAnimInst->Montage_Play(MontageToPlay);
+	}
+}
+
+void UCGameplayAbility::StopMontageAfterCurrentSection(UAnimMontage* MontageToStop)
+{
+	UAnimInstance* OwnerAnimInst = GetOwnerAnimInstance();
+	if (OwnerAnimInst)
+	{
+		FName CurrentSectionName = OwnerAnimInst->Montage_GetCurrentSection(MontageToStop);
+		OwnerAnimInst->Montage_SetNextSection(CurrentSectionName,NAME_None,MontageToStop);
+	}
+}
+
+
 ACharacter* UCGameplayAbility::GetAvatarCharacter()
 {
 	if (!AvatarCharacter)
@@ -150,4 +205,15 @@ void UCGameplayAbility::ApplyGameplayEffectToHitResultActor(const FHitResult& Hi
 		UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(HitResult.GetActor())
 		);
 		
+}
+
+bool UCGameplayAbility::IsActorTeamAttitudeIs(const AActor* OtherActor, ETeamAttitude::Type TargetTeam) const
+{
+	if (!OtherActor) return false;
+	IGenericTeamAgentInterface* GenericTeamAgentInterface = Cast<IGenericTeamAgentInterface>(GetAvatarActorFromActorInfo());
+	if (GenericTeamAgentInterface)
+	{
+		return GenericTeamAgentInterface->GetTeamAttitudeTowards(*OtherActor) == TargetTeam;
+	}
+	return false;
 }
