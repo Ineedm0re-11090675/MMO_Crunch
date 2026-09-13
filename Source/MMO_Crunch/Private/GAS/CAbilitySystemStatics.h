@@ -25,6 +25,7 @@ public:
 	static FGameplayTag GetEmptyHealthStatsAbilityTag();
 	static FGameplayTag GetEmptyManaStatsAbilityTag();
 	static FGameplayTag GetCrossHairTag();
+	static FGameplayTag GetTargetUpdatedTag();
 	static bool IsHero(const AActor* ActorToCheck);
 	static bool ActorHasTag(const AActor* ActorToCheck,const FGameplayTag& TagToCheck);
 	static bool IsActorDead(const AActor* ActorToCheck);

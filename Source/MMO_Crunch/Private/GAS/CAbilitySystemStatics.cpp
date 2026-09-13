@@ -65,6 +65,11 @@ FGameplayTag UCAbilitySystemStatics::GetCrossHairTag()
 	return FGameplayTag::RequestGameplayTag("stats.CrossHair");   
 }
 
+FGameplayTag UCAbilitySystemStatics::GetTargetUpdatedTag()
+{
+	return FGameplayTag::RequestGameplayTag("target.updated");
+}
+
 bool UCAbilitySystemStatics::IsHero(const AActor* ActorToCheck)
 {
 	return ActorHasTag(ActorToCheck,GetHeroTag());

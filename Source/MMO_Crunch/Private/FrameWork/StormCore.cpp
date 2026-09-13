@@ -128,7 +128,7 @@ void AStormCore::InfluenceLeftRange(UPrimitiveComponent* OverlappedComponent, AA
 			}
 		}else if (TeamAgentInterface->GetGenericTeamId() == 1 )
 		{
-			TeamTwoInfluenceCount++;
+			TeamTwoInfluenceCount--;
 			if (TeamTwoInfluenceCount < 0)
 			{
 				TeamTwoInfluenceCount=0;

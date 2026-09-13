@@ -30,6 +30,7 @@ protected:
 
 	FGenericTeamId GetOwnerTeamId() const;
 	bool IsActorTeamAttitudeIs(const AActor* OtherActor,ETeamAttitude::Type TargetTeam) const;
+	void SendLocalGameplayEvent(const FGameplayTag& Tag,const FGameplayEventData& Data);
 private: 
 	UPROPERTY(EditDefaultsOnly,Category = "Debug")
 	bool bShowDebugSphere = false;

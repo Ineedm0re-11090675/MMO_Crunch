@@ -7,13 +7,14 @@
 #include "GAS/CGameplayAbility.h"
 #include "GAS/CGameplayAbilityTypes.h"
 #include "GenericTeamAgentInterface.h"
+#include "Widget/RenderActorTargetInterface.h"
 #include "CCharacter.generated.h"
 
 /*
  **
  */
 UCLASS()
-class ACCharacter : public ACharacter,public IAbilitySystemInterface ,public IGenericTeamAgentInterface
+class ACCharacter : public ACharacter,public IAbilitySystemInterface ,public IGenericTeamAgentInterface,public IRenderActorTargetInterface
 {
 	GENERATED_BODY()
 protected:
@@ -35,6 +36,14 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	const TMap<ECAbilityInputId,TSubclassOf<class UGameplayAbility>>& GetAbility() const;
+
+	virtual FVector GetCaptureLocalPosition() const override;
+	virtual FRotator GetCaptureLocalRotation() const override;
+private:
+	UPROPERTY(EditDefaultsOnly,Category= "Capture")
+	FVector HeadshotLocalCapturePosition;
+	UPROPERTY(EditDefaultsOnly,Category= "Capture")
+	FRotator HeadshotLocalCaptureRotation;
 protected:
 	UPROPERTY(VisibleDefaultsOnly,Category = "Gameplay Effects")
 	class UCAbilitySystemComponent* CAbilitySystemComponent;

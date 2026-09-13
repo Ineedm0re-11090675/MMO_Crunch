@@ -73,7 +73,7 @@ void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 void ACPlayerCharacter::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
 {
 	OutLocation = CameraComp->GetComponentLocation();
-	OutRotation = CameraComp->GetComponentRotation(); 
+	OutRotation = GetBaseAimRotation(); 
 }
 
 void ACPlayerCharacter::HandleLook(const FInputActionValue& LookActionValue)

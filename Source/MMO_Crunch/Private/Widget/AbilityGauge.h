@@ -4,10 +4,11 @@
 #include "Blueprint/UserWidget.h"
 #include  "Blueprint/IUserObjectListEntry.h"
 #include "GameplayEffectTypes.h"
+ #include "Abilities/GameplayAbility.h"
 #include "AbilityGauge.generated.h"
 
 class UAbilitySystemComponent;
-struct FGameplayAbilitySpec;
+
 
 USTRUCT(BlueprintType)
 struct FAbilityWidgetData : public FTableRowBase
@@ -89,7 +90,7 @@ private:
 	UPROPERTY()
 	const UAbilitySystemComponent* OwningASC;
 
-	const FGameplayAbilitySpec* CachedAbilitySpec;
+	FGameplayAbilitySpecHandle CachedAbilitySpecHandle;
 
 	const FGameplayAbilitySpec* GetAbilitySpec();
 

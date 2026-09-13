@@ -95,6 +95,16 @@ const TMap<ECAbilityInputId, TSubclassOf<UGameplayAbility>>& ACCharacter::GetAbi
 	return CAbilitySystemComponent->GetAbility();
 }
 
+FVector ACCharacter::GetCaptureLocalPosition() const
+{
+	return HeadshotLocalCapturePosition;
+}
+
+FRotator ACCharacter::GetCaptureLocalRotation() const
+{
+	return HeadshotLocalCaptureRotation;
+} 
+
 void ACCharacter::DeathMontageFinished()
 {
 	if (IsDead())
