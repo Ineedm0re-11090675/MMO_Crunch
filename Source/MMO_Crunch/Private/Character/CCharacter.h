@@ -76,6 +76,8 @@ public:
 
 	void SpawnImmediately();
 
+	FORCEINLINE bool GetIsInFocusMode() const { return bIsInFocusMode; }
+	
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_SendGameplayEventToSelf(const FGameplayTag& GameplayTag,const FGameplayEventData& GameplayEventData);
 private:
@@ -99,6 +101,8 @@ private:
 	void HandleDeathTagChanged(const FGameplayTag Tag,int32 NewCount);
 	void HandleStunTagChanged(const FGameplayTag Tag,int32 NewCount);
 	void HandleAimingTagChanged(const FGameplayTag Tag,int32 NewCount);
+	void HandleFocusTagChanged(const FGameplayTag Tag,int32 NewCount);
+	bool bIsInFocusMode = false;
 	void SetIsAiming(bool bIsAiming);
 	virtual void OnAimChange(bool bIsAiming);
 	

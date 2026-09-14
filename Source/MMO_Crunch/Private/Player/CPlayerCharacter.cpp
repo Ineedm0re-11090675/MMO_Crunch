@@ -86,6 +86,7 @@ void ACPlayerCharacter::HandleLook(const FInputActionValue& LookActionValue)
 
 void ACPlayerCharacter::HandleMove(const FInputActionValue& MoveActionValue)
 {
+	if (GetIsInFocusMode()) return;
 	FVector2D InputValue = MoveActionValue.Get<FVector2D>();
 	InputValue.Normalize();
 

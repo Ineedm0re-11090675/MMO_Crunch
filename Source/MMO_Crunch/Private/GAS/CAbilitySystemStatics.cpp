@@ -70,6 +70,11 @@ FGameplayTag UCAbilitySystemStatics::GetTargetUpdatedTag()
 	return FGameplayTag::RequestGameplayTag("target.updated");
 }
 
+FGameplayTag UCAbilitySystemStatics::GetFocusTag()
+{
+	return FGameplayTag::RequestGameplayTag("stats.focus") ;
+}
+
 bool UCAbilitySystemStatics::IsHero(const AActor* ActorToCheck)
 {
 	return ActorHasTag(ActorToCheck,GetHeroTag());

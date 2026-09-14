@@ -22,7 +22,9 @@ protected:
 	void PushTarget(AActor* Target,const FVector& PushForce);
 	void PushTargets(const TArray<AActor*>Actors,const FVector& PushForce);
 	void PushTargets(const FGameplayAbilityTargetDataHandle& TargetDataHandle,const FVector& PushForce);
-
+	void PushTargetsFromLocation(const FGameplayAbilityTargetDataHandle& TargetDataHandle,const FVector& FromLocation , float PushSpeed);
+	void PushTargetsFromLocation(const TArray<AActor*>& Targets,const FVector& FromLocation , float PushSpeed);
+	
 	void PlayMontageLocally(UAnimMontage* MontageToPlay);
 	void StopMontageAfterCurrentSection(UAnimMontage* MontageToStop);
 	ACharacter* GetAvatarCharacter();

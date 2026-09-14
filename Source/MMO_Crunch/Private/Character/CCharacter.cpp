@@ -185,6 +185,13 @@ void ACCharacter::HandleAimingTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
 	SetIsAiming(NewCount !=0);
 }
+
+void ACCharacter::HandleFocusTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	bIsInFocusMode = NewCount >0;
+	
+}
+
 void ACCharacter::OnAimChange(bool bIsAiming)
 {
 	//Override on child;
@@ -366,7 +373,8 @@ void ACCharacter::BindGASChangedDelegate()
 		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetDeathStatsAbilityTag()).AddUObject(this,&ACCharacter::HandleDeathTagChanged);
 		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetStunStatsAbilityTag()).AddUObject(this,&ACCharacter::HandleStunTagChanged);
 		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetAimingStatsAbilityTag()).AddUObject(this,&ACCharacter::HandleAimingTagChanged);
-
+		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetFocusTag()).AddUObject(this,&ACCharacter::HandleFocusTagChanged);
+		
 		CAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMoveSpeedAttribute()).AddUObject(this,&ACCharacter::MoveSpeedUpdated);
 		CAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxHealthAttribute()).AddUObject(this,&ACCharacter::MaxHealthUpdated);
 		CAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxManaAttribute()).AddUObject(this,&ACCharacter::MaxManaUpdated);
