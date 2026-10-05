@@ -180,6 +180,23 @@ void UCGameplayAbility::PushTargetsFromLocation(const TArray<AActor*>& Targets, 
 	}
 }
 
+void UCGameplayAbility::PushTargetsFromOwnerLocation(const TArray<AActor*>& Targets, float PushSpeed)
+{
+	AActor* AvatarActor =GetAvatarActorFromActorInfo();
+	if (AvatarActor)
+	{
+		FVector OwnerLocation = AvatarActor->GetActorLocation();
+		PushTargetsFromLocation(Targets,OwnerLocation,PushSpeed);
+	}
+}
+
+void UCGameplayAbility::PushTargetsFromOwnerLocation(const FGameplayAbilityTargetDataHandle& TargetDataHandle,
+	float PushSpeed)
+{
+	TArray<AActor*> TargetActors = UAbilitySystemBlueprintLibrary::GetAllActorsFromTargetData(TargetDataHandle);
+	PushTargetsFromOwnerLocation(TargetActors, PushSpeed);
+}
+
 void UCGameplayAbility::PlayMontageLocally(UAnimMontage* MontageToPlay)
 {
 	UAnimInstance* OwnerAnimInst = GetOwnerAnimInstance();

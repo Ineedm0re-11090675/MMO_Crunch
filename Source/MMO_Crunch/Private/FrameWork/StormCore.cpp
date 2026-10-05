@@ -44,7 +44,7 @@ void AStormCore::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
-
+#if WITH_EDITOR
 void AStormCore::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
@@ -61,6 +61,7 @@ void AStormCore::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyCh
 		*/
 	}
 }
+#endif
 
 float AStormCore::GetProgress() const
 {

@@ -27,6 +27,10 @@ public:
 	static FGameplayTag GetCrossHairTag();
 	static FGameplayTag GetTargetUpdatedTag();
 	static FGameplayTag GetFocusTag();
+	static FGameplayTag GetGenericDamagePointTag();
+	static FGameplayTag GetGenericTargetPointTag();
+
+	
 	static bool IsHero(const AActor* ActorToCheck);
 	static bool ActorHasTag(const AActor* ActorToCheck,const FGameplayTag& TagToCheck);
 	static bool IsActorDead(const AActor* ActorToCheck);
@@ -43,4 +47,5 @@ public:
 	static float GetManaCostFor(const UGameplayAbility* AbilityCOD,const UAbilitySystemComponent& OwnASC,int Level);
 	static float GetCooldownDurationFor(const UGameplayAbility* AbilityCOD,const UAbilitySystemComponent& OwnASC,int Level);
 	static float GetCooldownRemainingFor(const UGameplayAbility* AbilityCOD,const UAbilitySystemComponent& OwnASC);
+	static void SendLocalGameplayCue(AActor* CueTargetActor, const FHitResult& HitResult, const FGameplayTag& GameplayCueTag);
 };

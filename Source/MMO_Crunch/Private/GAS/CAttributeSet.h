@@ -27,6 +27,8 @@ public:
 	ATTRIBUTE_ACCESSORS(UCAttributeSet, MoveSpeed)
 	ATTRIBUTE_ACCESSORS(UCAttributeSet, CachedManaPercent)
 	ATTRIBUTE_ACCESSORS(UCAttributeSet, CachedHealthPercent)
+	ATTRIBUTE_ACCESSORS(UCAttributeSet, MoveAcceleration)
+	
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/*
@@ -76,6 +78,9 @@ private:
 	
 	UPROPERTY(ReplicatedUsing=OnRep_MoveSpeed)
 	FGameplayAttributeData MoveSpeed;
+	
+	UPROPERTY(ReplicatedUsing = OnRep_MoveAcceleration)
+	FGameplayAttributeData MoveAcceleration;
 	UFUNCTION()
 	void OnRep_Heath(const FGameplayAttributeData& OldValue);
 	
@@ -96,4 +101,7 @@ private:
 
 	UFUNCTION()
 	void OnRep_MoveSpeed(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	void OnRep_MoveAcceleration(const FGameplayAttributeData& OldValue);
 };

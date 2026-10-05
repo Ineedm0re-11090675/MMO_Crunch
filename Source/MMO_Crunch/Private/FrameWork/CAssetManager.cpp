@@ -1,5 +1,7 @@
 #include "CAssetManager.h"
 
+#include "Character/PA_CharacterDefinition.h"
+
 UCAssetManager& UCAssetManager::Get()
 {
 	//Singleton ：整个游戏进程里，UE 只维护一个全局的 UAssetManager 实例
@@ -11,6 +13,26 @@ UCAssetManager& UCAssetManager::Get()
 	UE_LOG(LogLoad,Fatal,TEXT("Asset Manager Needs to be of the type CAssetsManager"))
 	return *NewObject<UCAssetManager>();
 }
+
+void UCAssetManager::LoadCharacterDefinition(const FStreamableDelegate& LoadFinishCallback)
+{
+	LoadPrimaryAssetsWithType(UPA_CharacterDefinition::GetPrimaryAssetType(),TArray<FName>(),LoadFinishCallback);
+}
+
+bool UCAssetManager::GetLoadedCharacterDefinition(TArray<UPA_CharacterDefinition*>& LoadedDefinition) const
+{
+	TArray<UObject*> LoadedObjects;
+	bool bLoaded = GetPrimaryAssetObjectList(UPA_CharacterDefinition::GetPrimaryAssetType(),LoadedObjects);
+	if (bLoaded)
+	{
+		for (UObject* Item : LoadedObjects)
+		{
+			LoadedDefinition.Add(Cast<UPA_CharacterDefinition>(Item));
+		}
+	}
+	return bLoaded;
+}
+
 
 void UCAssetManager::LoadShopItem(const FStreamableDelegate& LoadFinishCallback)
 {

@@ -13,13 +13,20 @@ public:
 	virtual APlayerController* SpawnPlayerController(ENetRole InRemoteRole, const FString& Options) override;	
 	
 	virtual void StartPlay() override;
+	
+	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
+
+	virtual APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot) override;
 private:
-	FGenericTeamId GetTeamIDForPlayerController(const APlayerController* PC) const;
+	FGenericTeamId GetTeamIDForPlayer(const AController* PC) const;
 
 	AActor* FindNextStartSpotForTeam(const FGenericTeamId& TeamId) const;
 	UPROPERTY(EditDefaultsOnly,Category = "Team")
 	TMap<FGenericTeamId, FName> TeamStartSpotTagMap;
 
+	UPROPERTY(EditDefaultsOnly,Category = "Team")
+	TSubclassOf<APawn> BackupPawn;
+	
 	class AStormCore* GetStormCore() const ;
 
 	void MatchFinished(AActor* ViewTarget , int WinningTeam);

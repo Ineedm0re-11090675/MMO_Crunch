@@ -5,12 +5,18 @@
 #include "Inventory/PA_ShopItem.h"
 #include "CAssetManager.generated.h"
 
+class UPA_CharacterDefinition;
+
 UCLASS()
 class UCAssetManager : public UAssetManager
 {
 	GENERATED_BODY()
 public:
 	static UCAssetManager& Get();
+
+	void LoadCharacterDefinition(const FStreamableDelegate& LoadFinishCallback );
+	bool GetLoadedCharacterDefinition(TArray<UPA_CharacterDefinition*>& LoadedDefinition) const;
+	
 	void LoadShopItem(const FStreamableDelegate& LoadFinishCallback);
 	bool GetLoadedItem(TArray<const UPA_ShopItem*>& OutItems) const;
 

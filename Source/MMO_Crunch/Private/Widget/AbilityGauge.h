@@ -71,6 +71,10 @@ private:
 	UPROPERTY()
 	UGameplayAbility* AbilityCDO;//ClassDefaultObject
 
+	UPROPERTY(EditDefaultsOnly,Category="Tool Tip")
+	TSubclassOf<class UAbilityToolTip> AbilityToolTipClass;
+
+	void CreateToolTip(const FAbilityWidgetData* WidgetData);
 	void AbilityCommittedCallback(UGameplayAbility* Ability);
 
 	void StartCooldown(float CooldownTimeRemaining,float CooldownDuration);

@@ -22,9 +22,9 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
-
+#if WITH_EDITOR
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
-
+#endif
 	float GetProgress()const ;
 protected:
 	virtual void BeginPlay() override;

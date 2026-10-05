@@ -23,6 +23,7 @@ public:
 	ACCharacter();
 
 	void ServerSideInit();
+
 	void ClientSideInit();
 
 	bool IsLocallyControlledByPlayer() const;

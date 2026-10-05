@@ -17,3 +17,5 @@ Saved/
 *.swp
 *.swo
 
+# Codex: Unreal generates package version counters during Mac builds.
+*.PackageVersionCounter

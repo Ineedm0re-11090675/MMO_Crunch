@@ -24,6 +24,8 @@ protected:
 	void PushTargets(const FGameplayAbilityTargetDataHandle& TargetDataHandle,const FVector& PushForce);
 	void PushTargetsFromLocation(const FGameplayAbilityTargetDataHandle& TargetDataHandle,const FVector& FromLocation , float PushSpeed);
 	void PushTargetsFromLocation(const TArray<AActor*>& Targets,const FVector& FromLocation , float PushSpeed);
+	void PushTargetsFromOwnerLocation(const TArray<AActor*>& Targets, float PushSpeed);
+	void PushTargetsFromOwnerLocation(const FGameplayAbilityTargetDataHandle& TargetDataHandle, float PushSpeed);
 	
 	void PlayMontageLocally(UAnimMontage* MontageToPlay);
 	void StopMontageAfterCurrentSection(UAnimMontage* MontageToStop);

@@ -1,5 +1,5 @@
 #include "AbilityGauge.h"
-
+#include "AbilityToolTip.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbility.h"
@@ -64,8 +64,26 @@ void UAbilityGauge::ConfigureAbilityWithWidgetData(const FAbilityWidgetData* Wid
 	if (Icon && WidgetData)
 	{
 		Icon->GetDynamicMaterial()->SetTextureParameterValue(IconMaterialParaName,WidgetData->Icon.LoadSynchronous());
+		CreateToolTip(WidgetData);
 	}
 }
+
+void UAbilityGauge::CreateToolTip(const FAbilityWidgetData* WidgetData)
+{
+	if (!WidgetData || !AbilityToolTipClass)
+	{
+		return;
+	}
+	UAbilityToolTip* InstantiatedToolTip = CreateWidget<UAbilityToolTip>(GetOwningPlayer(),AbilityToolTipClass);
+	if (InstantiatedToolTip)
+	{
+		float CooldownDuration =UCAbilitySystemStatics::GetStaticCooldownDurationFromAbility(AbilityCDO);
+		float Cost =UCAbilitySystemStatics::GetStaticCostFromAbility(AbilityCDO);
+		InstantiatedToolTip->SetAbilityInfo(WidgetData->AbilityName,WidgetData->Icon.LoadSynchronous(),WidgetData->Description,CooldownDuration,Cost);
+
+		SetToolTip(InstantiatedToolTip);
+	}
+ }
 
 void UAbilityGauge::AbilityCommittedCallback(UGameplayAbility* Ability)
 {
