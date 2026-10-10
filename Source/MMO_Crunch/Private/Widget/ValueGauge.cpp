@@ -3,7 +3,7 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "AbilitySystemComponent.h"
-#include "LandscapeDataAccess.h"
+// Codex: Remove the unused Landscape header; this runtime module does not depend on Landscape.
 
  void UValueGauge::NativeConstruct()
  {
@@ -22,7 +22,9 @@
  	ValueCache = NewValue;
  	if (NewMaxValue == 0)
  	{
+#if WITH_EDITOR
  		UE_LOG(LogTemp,Warning,TEXT("UValueGauge::SetValue -Max Value cant be zero"),*GetName());
+#endif
  		return;
  	}
  	float Percent =NewValue / NewMaxValue;

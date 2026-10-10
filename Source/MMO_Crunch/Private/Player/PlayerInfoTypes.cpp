@@ -19,10 +19,9 @@ FPlayerSelection::FPlayerSelection(uint8 InSlot, const APlayerState* InPlayerSta
 bool FPlayerSelection::IsForPlayer(const APlayerState* InPlayerState) const
 {
 	if (!InPlayerState) return false;
-#if WITH_EDITOR
+	// Codex: Server builds also need this comparison and a return value.
 	return PlayerUniqueId.IsValid()
 		   && InPlayerState->GetUniqueId() == PlayerUniqueId;
-#endif
 }
 
 bool FPlayerSelection::IsValid() const
@@ -42,7 +41,8 @@ bool FPlayerSelection::IsValid() const
 	{
 		return false;
 	}
-	re turn true;
+	// Codex: Fix the return keyword so non-editor targets compile.
+	return true;
 #endif
 }
 

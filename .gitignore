@@ -19,3 +19,10 @@ Saved/
 
 # Codex: Unreal generates package version counters during Mac builds.
 *.PackageVersionCounter
+
+# Codex: Packaged applications and generated file-open logs are build outputs.
+Publish/
+Build/*/FileOpenOrder/
+
+# Codex: Rider stores machine-specific project settings here.
+*.uproject.DotSettings.user

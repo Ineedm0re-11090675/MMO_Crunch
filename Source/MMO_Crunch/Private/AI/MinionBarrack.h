@@ -5,6 +5,9 @@
 #include "GenericTeamAgentInterface.h"
 #include "MinionBarrack.generated.h"
 
+// Codex: Declare the spawn point type used by this header; the .cpp includes its full definition.
+class APlayerStart;
+
 UCLASS()
 class AMinionBarrack : public AActor
 {

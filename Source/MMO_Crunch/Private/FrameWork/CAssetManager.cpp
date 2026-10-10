@@ -10,7 +10,9 @@ UCAssetManager& UCAssetManager::Get()
 	{
 		return *Singleton;
 	}
+#if WITH_EDITOR
 	UE_LOG(LogLoad,Fatal,TEXT("Asset Manager Needs to be of the type CAssetsManager"))
+#endif
 	return *NewObject<UCAssetManager>();
 }
 

@@ -73,6 +73,10 @@ void ULobbyWidget::SelectSlot(uint8 NewSlotId)
 	{
 		 LobbyPlayerController->Server_RequestSlotSelectionChange(NewSlotId);
 	}
+
+	// 1（法师，8）
+	// 2（战士，11）
+	
 }
 
 void ULobbyWidget::ConfigureGameState()

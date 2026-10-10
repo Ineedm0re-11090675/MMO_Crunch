@@ -225,8 +225,10 @@ void UInventoryComponent::GrantItem(const UPA_ShopItem* NewItem)
 		InventoryItem->InitItem(NewHandle,NewItem,OwnAbilitySystemComponent);
 		InventoryMap.Add(NewHandle, InventoryItem);
 		OnInventoryAdded.Broadcast(InventoryItem);
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Warning, TEXT("Grant Item %s , with Id %d"),
-			   *(InventoryItem->GetShopItem()->GetItemName().ToString()), NewHandle.GetHandleId());
+		*(InventoryItem->GetShopItem()->GetItemName().ToString()), NewHandle.GetHandleId());
+#endif
 		FGameplayAbilitySpecHandle GrantedAbilitySpecHandle = InventoryItem->GetGrantedAbilitySpecHandle();
 		Client_ItemAdded(NewHandle, NewItem,GrantedAbilitySpecHandle);
 	}
@@ -336,8 +338,10 @@ void UInventoryComponent::Client_ItemAdded_Implementation(FInventoryItemHandle A
 	InventoryItem->SetGrantedAbilitySpecHandle(GrantedAbilitySpecHandle);
 	InventoryMap.Add(AssignedHandle, InventoryItem);
 	OnInventoryAdded.Broadcast(InventoryItem);
+#if WITH_EDITOR
 	UE_LOG(LogTemp, Warning, TEXT("Grant Item %s , with Id %d"),
 	       *(InventoryItem->GetShopItem()->GetItemName().ToString()), AssignedHandle.GetHandleId());
+#endif
 }
 
 bool UInventoryComponent::Server_Purchase_Validate(const UPA_ShopItem* ItemToPurchase)

@@ -36,39 +36,39 @@ ACPlayerCharacter::ACPlayerCharacter()
 void ACPlayerCharacter::PawnClientRestart()
 {
 	Super::PawnClientRestart();
-	APlayerController* OwningController = GetController<APlayerController>();
-	if (OwningController)
-	{
-		UEnhancedInputLocalPlayerSubsystem* InputLocalPlayerSubsystem = OwningController->GetLocalPlayer()->GetSubsystem
-			<UEnhancedInputLocalPlayerSubsystem>();
-		if (InputLocalPlayerSubsystem)
-		{
-			InputLocalPlayerSubsystem->RemoveMappingContext(GamePlayInputMapContext);
-			InputLocalPlayerSubsystem->AddMappingContext(GamePlayInputMapContext, 0);
-		}
-	}
+	// APlayerController* OwningController = GetController<APlayerController>();
+	// if (OwningController)
+	// {
+	// 	UEnhancedInputLocalPlayerSubsystem* InputLocalPlayerSubsystem = OwningController->GetLocalPlayer()->GetSubsystem
+	// 		<UEnhancedInputLocalPlayerSubsystem>();
+	// 	if (InputLocalPlayerSubsystem)
+	// 	{
+	// 		InputLocalPlayerSubsystem->RemoveMappingContext(GamePlayInputMapContext);
+	// 		InputLocalPlayerSubsystem->AddMappingContext(GamePlayInputMapContext, 0);
+	// 	}
+	// }
 }
 
-void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent);
-	if (EnhancedInputComponent)
-	{
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACPlayerCharacter::Jump);
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACPlayerCharacter::HandleLook);
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACPlayerCharacter::HandleMove);
-
-		EnhancedInputComponent->BindAction(UpgradeAbilityAction,ETriggerEvent::Started,this,&ACPlayerCharacter::LearnAbilityLeaderDown);
-		EnhancedInputComponent->BindAction(UpgradeAbilityAction,ETriggerEvent::Completed,this,&ACPlayerCharacter::LearnAbilityLeaderUp);
-		for (const TPair<ECAbilityInputId, UInputAction*>& InputActionPair : GameplayAbilityInputAction)
-		{
-			EnhancedInputComponent->BindAction(InputActionPair.Value, ETriggerEvent::Triggered, this,
-			                                   &ACPlayerCharacter::HandleAbilityInput, InputActionPair.Key);
-		}
-		EnhancedInputComponent->BindAction(UseInventoryItemAction, ETriggerEvent::Triggered, this,&ACPlayerCharacter::UseInventoryItem);
-	}
-}
+// void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+// {
+// 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+// 	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent);
+// 	if (EnhancedInputComponent)
+// 	{
+// 		// EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACPlayerCharacter::Jump);
+// 		//EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACPlayerCharacter::HandleLook);
+// 		//EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACPlayerCharacter::HandleMove);
+//
+// 		EnhancedInputComponent->BindAction(UpgradeAbilityAction,ETriggerEvent::Started,this,&ACPlayerCharacter::LearnAbilityLeaderDown);
+// 		EnhancedInputComponent->BindAction(UpgradeAbilityAction,ETriggerEvent::Completed,this,&ACPlayerCharacter::LearnAbilityLeaderUp);
+// 		for (const TPair<ECAbilityInputId, UInputAction*>& InputActionPair : GameplayAbilityInputAction)
+// 		{
+// 			EnhancedInputComponent->BindAction(InputActionPair.Value, ETriggerEvent::Triggered, this,
+// 			                                   &ACPlayerCharacter::HandleAbilityInput, InputActionPair.Key);
+// 		}
+// 		EnhancedInputComponent->BindAction(UseInventoryItemAction, ETriggerEvent::Triggered, this,&ACPlayerCharacter::UseInventoryItem);
+// 	}
+// }
 
 void ACPlayerCharacter::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
 {
@@ -76,31 +76,33 @@ void ACPlayerCharacter::GetActorEyesViewPoint(FVector& OutLocation, FRotator& Ou
 	OutRotation = GetBaseAimRotation(); 
 }
 
-void ACPlayerCharacter::HandleLook(const FInputActionValue& LookActionValue)
+/*void ACPlayerCharacter::HandleLook(const FInputActionValue& LookActionValue)
 {
 	FVector2D InputValue = LookActionValue.Get<FVector2D>();
 
 	AddControllerYawInput(InputValue.X);
 	AddControllerPitchInput(InputValue.Y);
-}
+}*/
 
-void ACPlayerCharacter::HandleMove(const FInputActionValue& MoveActionValue)
-{
-	if (GetIsInFocusMode()) return;
-	FVector2D InputValue = MoveActionValue.Get<FVector2D>();
-	InputValue.Normalize();
+// void ACPlayerCharacter::HandleMove(const FInputActionValue& MoveActionValue)
+// {
+// 	if (GetIsInFocusMode()) return;
+// 	FVector2D InputValue = MoveActionValue.Get<FVector2D>();
+// 	InputValue.Normalize();
+//
+// 	AddMovementInput(GetMoveForwardVector() * InputValue.Y + GetLookRightVector() * InputValue.X);
+// }
 
-	AddMovementInput(GetMoveForwardVector() * InputValue.Y + GetLookRightVector() * InputValue.X);
-}
 
 void ACPlayerCharacter::LearnAbilityLeaderDown(const FInputActionValue& MoveActionValue)
 {
-	bIsLearnAbilityLeaderDown = true;
+	// bIsLearnAbilityLeaderDown = true;
 }
+
 
 void ACPlayerCharacter::LearnAbilityLeaderUp(const FInputActionValue& MoveActionValue)
 {
-	bIsLearnAbilityLeaderDown = false;  
+	// bIsLearnAbilityLeaderDown = false;  
 }
 
 void ACPlayerCharacter::HandleAbilityInput(const FInputActionValue& AbilityInputValue,
@@ -124,11 +126,11 @@ void ACPlayerCharacter::HandleAbilityInput(const FInputActionValue& AbilityInput
 
 		需要绑定：Character ，ASC
 	 */
-	if (bPressed && bIsLearnAbilityLeaderDown)
-	{
-		UpgradeAbilityWithInputID(AbilityInputId);
-		return;
-	}
+	// if (bPressed && bIsLearnAbilityLeaderDown)
+	// {
+	// 	UpgradeAbilityWithInputID(AbilityInputId);
+	// 	return;
+	// }
 	if (bPressed)
 	{
 		GetAbilitySystemComponent()->AbilityLocalInputPressed((int32)AbilityInputId);

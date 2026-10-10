@@ -53,8 +53,8 @@ ACCharacter::ACCharacter()
 
 void ACCharacter::ServerSideInit()
 {
-	CAbilitySystemComponent->InitAbilityActorInfo(this,this);
-	CAbilitySystemComponent->ServerSideInit();
+	 CAbilitySystemComponent->InitAbilityActorInfo(this,this);
+	 CAbilitySystemComponent->ServerSideInit();
 }
 
 void ACCharacter::ClientSideInit()
@@ -378,7 +378,6 @@ void ACCharacter::BindGASChangedDelegate()
 		CAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMoveSpeedAttribute()).AddUObject(this,&ACCharacter::MoveSpeedUpdated);
 		CAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxHealthAttribute()).AddUObject(this,&ACCharacter::MaxHealthUpdated);
 		CAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxManaAttribute()).AddUObject(this,&ACCharacter::MaxManaUpdated);
-
 	}
 }
 

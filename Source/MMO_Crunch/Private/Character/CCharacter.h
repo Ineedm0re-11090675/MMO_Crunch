@@ -7,6 +7,7 @@
 #include "GAS/CGameplayAbility.h"
 #include "GAS/CGameplayAbilityTypes.h"
 #include "GenericTeamAgentInterface.h"
+#include "GameFramework/MapleGASCharacter.h"
 #include "Widget/RenderActorTargetInterface.h"
 #include "CCharacter.generated.h"
 
@@ -14,7 +15,7 @@
  **
  */
 UCLASS()
-class ACCharacter : public ACharacter,public IAbilitySystemInterface ,public IGenericTeamAgentInterface,public IRenderActorTargetInterface
+class ACCharacter : public AMapleGASCharacter, public IGenericTeamAgentInterface,public IRenderActorTargetInterface
 {
 	GENERATED_BODY()
 protected:

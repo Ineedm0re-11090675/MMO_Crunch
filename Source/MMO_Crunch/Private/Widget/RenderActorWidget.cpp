@@ -29,7 +29,9 @@ void URenderActorWidget::ConfigureRenderActor()
 {
 	if (!GetRenderActor())
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Warning, TEXT("No RenderActor Spawn, Nothing will be render"));
+#endif
 		return;
 	}
 

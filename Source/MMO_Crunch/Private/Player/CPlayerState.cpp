@@ -51,6 +51,12 @@ TSubclassOf<APawn> ACPlayerState::GetSelectedPawnClass() const
 
 FGenericTeamId ACPlayerState::GetTeamIDBasedOnSlot() const
 {
+	//Codex: An unassigned/out-of-range slot is not team 1 during seamless travel
+	
+	if (PlayerSelection.GetSlot() >= UCNetStatic::GetPlayerCountPerTeam() * 2)
+	{
+		return FGenericTeamId::NoTeam;
+	}
 	return PlayerSelection.GetSlot() < UCNetStatic::GetPlayerCountPerTeam() ? FGenericTeamId{0}:FGenericTeamId{1};
 }
 

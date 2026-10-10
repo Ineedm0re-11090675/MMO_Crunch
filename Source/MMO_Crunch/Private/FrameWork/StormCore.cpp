@@ -153,7 +153,9 @@ void AStormCore::UpdateTeamWeight()
 		TeamWeight = TeamOffset / TeamTotal;
 	}
 	UpdateGoal();
+#if WITH_EDITOR
 	UE_LOG(LogTemp, Warning, TEXT("Team Weight: %f"), TeamWeight);
+#endif
 }
 
 void AStormCore::UpdateGoal()

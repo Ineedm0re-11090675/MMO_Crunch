@@ -1,6 +1,6 @@
 #include "ShopItemWidget.h"
 
-#include "IDetailTreeNode.h"
+// Codex: Keep this runtime widget free of the unused PropertyEditor-only IDetailTreeNode header.
 #include "Inventory/PA_ShopItem.h"
 #include "Components/ListView.h"
 #include "FrameWork//CAssetManager.h"

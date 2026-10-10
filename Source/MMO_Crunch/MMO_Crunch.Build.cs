@@ -10,7 +10,11 @@ public class MMO_Crunch : ModuleRules
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" });
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "EnhancedInput","GameplayAbilities","GameplayTasks","GameplayTags","UMG","SlateCore","Slate","AIModule","Niagara" });
+		PrivateDependencyModuleNames.AddRange(new string[]
+		{
+			"EnhancedInput","GameplayAbilities","GameplayTasks","GameplayTags","UMG","SlateCore","Slate","AIModule","Niagara",
+			"OnlineSubsystem","OnlineSubsystemEOS","OnlineSubsystemUtils","HTTP","NetWorking","Json","MapleCombat","MapleInput","MapleGAS"
+		});
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });

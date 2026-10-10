@@ -14,7 +14,6 @@ public:
 	void OnPossess(APawn* NewPawn) override;
 	// Only Called On Client, also Listener server
 	void AcknowledgePossession(APawn* NewPawn) override;
-
 	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
 
 	virtual FGenericTeamId GetGenericTeamId() const override;

@@ -7,13 +7,13 @@
 #include "CPlayerCharacter.generated.h"
 
 UCLASS()
-class ACPlayerCharacter : public ACCharacter 
+class ACPlayerCharacter : public ACCharacter
 {
 	GENERATED_BODY()
 public:
 	ACPlayerCharacter();
 	virtual void PawnClientRestart() override;
-	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	// virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
 private:
 	UPROPERTY()
@@ -55,11 +55,11 @@ private:
 	UInputAction* UseInventoryItemAction;
 	
 	
-	void HandleLook(const FInputActionValue& LookActionValue);
-	void HandleMove(const FInputActionValue& MoveActionValue);
+	//void HandleLook(const FInputActionValue& LookActionValue);
+	//void HandleMove(const FInputActionValue& MoveActionValue);
 	void LearnAbilityLeaderDown(const FInputActionValue& MoveActionValue);
 	void LearnAbilityLeaderUp(const FInputActionValue& MoveActionValue);
-	bool bIsLearnAbilityLeaderDown =false;
+	//bool bIsLearnAbilityLeaderDown =false;
 	void HandleAbilityInput(const FInputActionValue& AbilityInputValue,ECAbilityInputId AbilityInputId);
 	void UseInventoryItem(const FInputActionValue& InputValue);
 	

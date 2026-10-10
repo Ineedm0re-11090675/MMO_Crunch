@@ -94,7 +94,7 @@ void UCAbilitySystemComponent::GiveInitialAbility()
 	
 	for (const TPair<ECAbilityInputId,TSubclassOf<UGameplayAbility>>& AbilityPair : GameplayAbilities)
 	{
-		GiveAbility(FGameplayAbilitySpec(AbilityPair.Value,0,(int32)AbilityPair.Key,nullptr));
+		GiveAbility(FGameplayAbilitySpec(AbilityPair.Value,1,(int32)AbilityPair.Key,nullptr));
 	}
 	
 	for (const TPair<ECAbilityInputId,TSubclassOf<UGameplayAbility>>& AbilityPair : BasicGameplayAbilities)
@@ -244,7 +244,9 @@ void UCAbilitySystemComponent::UpdateExperience(const FOnAttributeChangeData& Ch
 	const FRealCurve* ExpCurve = AbilitySystemGenerics->GetExpCurve();
 	if (!ExpCurve)
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp,Warning,TEXT("Error : cant find Curve"));
+#endif
 		return;
 	}
 

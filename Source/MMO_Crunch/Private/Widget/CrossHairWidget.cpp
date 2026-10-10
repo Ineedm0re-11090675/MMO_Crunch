@@ -22,7 +22,9 @@ void UCrossHairWidget::NativeConstruct()
 	CrossHairCanvasPanelSlot = Cast<UCanvasPanelSlot>(Slot);
 	if (!CrossHairCanvasPanelSlot)
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp,Error,TEXT("CrossHairCanvasPanelSlot is NULL"));
+#endif
 	}
 }
 

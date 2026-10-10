@@ -20,7 +20,9 @@ public:
 private:
 	FGenericTeamId GetTeamIDForPlayer(const AController* PC) const;
 
-	AActor* FindNextStartSpotForTeam(const FGenericTeamId& TeamId) const;
+	AActor* FindNextStartSpotForTeam(const FGenericTeamId& TeamId);
+	// Codex: Rotate through team starts without changing their PlayerStartTag, so later spawns can reuse them.
+	TMap<FGenericTeamId, int32> NextTeamStartIndex;
 	UPROPERTY(EditDefaultsOnly,Category = "Team")
 	TMap<FGenericTeamId, FName> TeamStartSpotTagMap;
 
