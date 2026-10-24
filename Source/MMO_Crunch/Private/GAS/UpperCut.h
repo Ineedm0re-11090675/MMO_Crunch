@@ -22,11 +22,12 @@ private:
 
 	UPROPERTY(EditDefaultsOnly,Category = "Launch")
 	TSubclassOf<UGameplayEffect> LaunchDamageEffect;
+	
 	UPROPERTY(EditDefaultsOnly,Category = "Launch")
 	float UppercutLaunchSpeed = 1000.f;
 	
 	UPROPERTY(EditDefaultsOnly,Category = "Launch")
-	float UppercutComboHoldSpeed= 100.f;
+	float UppercutComboHoldSpeed = 100.f;
 	
 	static FGameplayTag GetUpperCutTag();
 

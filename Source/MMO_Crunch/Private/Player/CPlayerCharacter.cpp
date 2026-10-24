@@ -33,6 +33,13 @@ ACPlayerCharacter::ACPlayerCharacter()
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>("Inventory Component");
 }
 
+UAbilitySystemComponent* ACPlayerCharacter::GetAbilitySystemComponent() const
+{
+	// Codex: 迁移期间，玩家角色的 ASC 接口返回 Maple ASC。
+	return GetMapleAbilitySystemComponent();
+}
+
+
 void ACPlayerCharacter::PawnClientRestart()
 {
 	Super::PawnClientRestart();

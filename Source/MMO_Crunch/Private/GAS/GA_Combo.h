@@ -2,6 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "CGameplayAbility.h"
+#include "AbilitySystem/Abilities/CombatAbility_Attack.h"
+#include "AbilitySystem/Abilities/CombatAbility_MeleeAttack.h"
 #include "GA_Combo.generated.h"
 
 UCLASS()

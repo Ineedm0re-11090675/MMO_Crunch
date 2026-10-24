@@ -36,6 +36,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	// Codex: Expose the inherited Maple ASC explicitly while legacy callers still use the existing interface.
+	UAbilitySystemComponent* GetMapleAbilitySystemComponent() const;
 
 	const TMap<ECAbilityInputId,TSubclassOf<class UGameplayAbility>>& GetAbility() const;
 

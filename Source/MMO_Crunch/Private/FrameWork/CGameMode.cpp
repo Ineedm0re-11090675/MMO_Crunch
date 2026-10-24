@@ -34,9 +34,14 @@ void ACGameMode::StartPlay()
 UClass* ACGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
 {
 	ACPlayerState* CPlayerState = InController->GetPlayerState<ACPlayerState>();
-	if (CPlayerState && CPlayerState->GetSelectedPawnClass())
+	// Codex: Resolve the selected class once; loading the character class can be synchronous.
+	if (CPlayerState)
 	{
-		return CPlayerState->GetSelectedPawnClass();
+		const TSubclassOf<APawn> SelectedPawnClass = CPlayerState->GetSelectedPawnClass();
+		if (SelectedPawnClass)
+		{
+			return SelectedPawnClass;
+		}
 	}
 	return BackupPawn;
 }

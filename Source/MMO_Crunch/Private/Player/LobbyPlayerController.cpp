@@ -50,6 +50,12 @@ ALobbyPlayerController::ALobbyPlayerController()
 
 void ALobbyPlayerController::Server_RequestStartMatch_Implementation()
 {
+	ACGameState* GameState = GetWorld()->GetGameState<ACGameState>();
+	if (!GameState || !GameState->CanStartMatch())
+	{
+		return;
+	}
+	
 	UCGameInstance* CGameInstance = GetGameInstance<UCGameInstance>();
 	if (CGameInstance)
 	{

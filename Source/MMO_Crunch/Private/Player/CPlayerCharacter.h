@@ -78,6 +78,7 @@ private:
 	 *Camera View
 	 */
 private: 
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override ;
 	virtual void OnAimChange(bool bIsAiming) override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Camera View")

@@ -90,6 +90,12 @@ UAbilitySystemComponent* ACCharacter::GetAbilitySystemComponent() const
 	return CAbilitySystemComponent;
 }
 
+UAbilitySystemComponent* ACCharacter::GetMapleAbilitySystemComponent() const
+{
+	// Codex: Call the base implementation directly so this migration accessor does not resolve back to the legacy override.
+	return AMapleGASCharacter::GetAbilitySystemComponent();
+}
+
 const TMap<ECAbilityInputId, TSubclassOf<UGameplayAbility>>& ACCharacter::GetAbility() const
 {
 	return CAbilitySystemComponent->GetAbility();
