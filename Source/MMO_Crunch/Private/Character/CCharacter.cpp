@@ -13,9 +13,19 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "Widget/OverHeadStatsGauge.h"
+#include "Reactor/Comp/CharacterProgressionComponent.h"
+
+
 
 void ACCharacter::BeginPlay()
 {
+	// MapleGAS 已在 Super::BeginPlay 内完成默认初始化后，再初始化成长规则。
+	Super::BeginPlay();
+
+	if (HasAuthority() && CharacterProgressionComponent)
+	{
+		CharacterProgressionComponent->InitializeFromASC(GetMapleAbilitySystemComponent());
+	}
 	Super::BeginPlay();
 	ConfigureOverHeadStatsWidget();
 	MeshRelativeTransform =  GetMesh()->GetRelativeTransform();
@@ -35,6 +45,12 @@ void ACCharacter::BeginPlay()
 
 ACCharacter::ACCharacter()
 {
+	// 在 ACCharacter 上创建 Character 成长组件。
+	CharacterProgressionComponent =
+		CreateDefaultSubobject<UCharacterProgressionComponent>(TEXT("Character Progression Component"));
+
+	
+
 	PrimaryActorTick.bCanEverTick = true;
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
@@ -405,5 +421,32 @@ void ACCharacter::MaxManaUpdated(const FOnAttributeChangeData& Data)
 	if (IsValid(CAttributeSet))
 	{
 		CAttributeSet->RescaleMana();
+	}
+}
+// 客户端请求经 Character RPC 到服务器，服务器再委托给成长组件。
+void ACCharacter::RequestAbilityUpgrade(TSubclassOf<UGameplayAbility> AbilityClass)
+{
+	if (!AbilityClass || !CharacterProgressionComponent)
+	{
+		return;
+	}
+
+	if (HasAuthority())
+	{
+		CharacterProgressionComponent->TryUpgradeAbility(AbilityClass);
+	}
+	else
+	{
+		Server_RequestAbilityUpgrade(AbilityClass);
+	}
+}
+
+// 服务器执行升级；组件会校验技能白名单和升级点。
+void ACCharacter::Server_RequestAbilityUpgrade_Implementation(
+	TSubclassOf<UGameplayAbility> AbilityClass)
+{
+	if (CharacterProgressionComponent)
+	{
+		CharacterProgressionComponent->TryUpgradeAbility(AbilityClass);
 	}
 }

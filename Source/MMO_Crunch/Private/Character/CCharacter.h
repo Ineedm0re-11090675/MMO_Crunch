@@ -14,6 +14,12 @@
 /*
  **
  */
+
+
+// 前置声明 Character 成长组件。
+class UCharacterProgressionComponent;
+
+
 UCLASS()
 class ACCharacter : public AMapleGASCharacter, public IGenericTeamAgentInterface,public IRenderActorTargetInterface
 {
@@ -155,6 +161,22 @@ private:
 	void MoveSpeedUpdated(const FOnAttributeChangeData& Data);
 	void MaxHealthUpdated(const FOnAttributeChangeData& Data);
 	void MaxManaUpdated(const FOnAttributeChangeData& Data); 
+	
+private:
+	/*
+	 **************Reactor************
+	 */
+	// Character 持有项目成长规则组件。
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components",
+		meta=(AllowPrivateAccess="true"))
+	TObjectPtr<UCharacterProgressionComponent> CharacterProgressionComponent;
+public:
+	//UI/输入请求升级；具体规则交给组件，实际 spec 修改交给 ASC。
+	UFUNCTION(BlueprintCallable, Category="Crunch|Progression")
+	void RequestAbilityUpgrade(TSubclassOf<UGameplayAbility> AbilityClass);
+
+	UFUNCTION(Server, Reliable)
+	void Server_RequestAbilityUpgrade(TSubclassOf<UGameplayAbility> AbilityClass);
 };
 
 
