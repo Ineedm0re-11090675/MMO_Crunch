@@ -3,6 +3,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "CAbilitySystemStatics.h"
+#include "AbilitySystem/Effects/CombatEffect_Damage.h"
 #include "TargetActor_GroundPick.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitTargetData.h"
@@ -113,7 +114,9 @@ void UGA_Blackhole::FinalTargetsReceived(const FGameplayAbilityTargetDataHandle&
 	FVector BlowCenter = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(TargetDataHandle,1).ImpactPoint;
 	if (K2_HasAuthority())
 	{
-		BP_ApplyGameplayEffectToTarget(TargetDataHandle,FinalBlowDamageEffect,GetAbilityLevel(CurrentSpecHandle,CurrentActorInfo));
+		// Codex: Route the legacy -130 Health final blow through MapleCombat damage and defense resolution.
+		ApplyMapleCombatDamageToTargetData(TargetDataHandle, UCombatEffect_Damage::StaticClass(), FinalBlowDamageAmount,
+			GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
 		PushTargetsFromLocation(TargetDataHandle,BlowCenter,BlowPushSpeed);
 
 

@@ -2,8 +2,11 @@
 #include "EngineUtils.h"
 #include "StormCore.h"
 #include "GameFramework/PlayerStart.h"
+// Codex: Use the owning player controller and defer RestartPlayer by one tick after death completion.
+#include "GameFramework/PlayerController.h"
 #include "Player/CPlayerController.h"
 #include "Player/CPlayerState.h"
+#include "TimerManager.h"
 
 APlayerController* ACGameMode::SpawnPlayerController(ENetRole InRemoteRole, const FString& Options)
 {
@@ -28,6 +31,43 @@ void ACGameMode::StartPlay()
 	if (StormCore)
 	{
 		StormCore->OnGoalReached.AddUObject(this,&ACGameMode::MatchFinished);
+	}
+}
+
+// Codex: Restart only player controllers on the server, after MapleCombat has detached the dying Pawn.
+bool ACGameMode::RequestPlayerRespawn(APlayerController* PlayerController)
+{
+	if (!HasAuthority() || !IsValid(PlayerController) || !GetWorld())
+	{
+		return false;
+	}
+
+	const TWeakObjectPtr<APlayerController> WeakPlayerController(PlayerController);
+	const FTimerDelegate RespawnDelegate = FTimerDelegate::CreateUObject(
+		this, &ThisClass::RestartPlayerAfterDeath, WeakPlayerController);
+	GetWorldTimerManager().SetTimerForNextTick(RespawnDelegate);
+	return true;
+}
+
+// Codex: A controller may have been reassigned before the deferred respawn runs; never spawn a duplicate Pawn.
+void ACGameMode::RestartPlayerAfterDeath(TWeakObjectPtr<APlayerController> PlayerController)
+{
+	APlayerController* Controller = PlayerController.Get();
+	if (!HasAuthority() || !IsValid(Controller))
+	{
+		return;
+	}
+
+	if (Controller->GetPawn())
+	{
+		UE_LOG(LogTemp, Verbose, TEXT("[Codex] Skipping respawn for %s because it already possesses a Pawn."), *GetNameSafe(Controller));
+		return;
+	}
+
+	RestartPlayer(Controller);
+	if (!Controller->GetPawn())
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Codex] RestartPlayer did not spawn a Pawn for %s."), *GetNameSafe(Controller));
 	}
 }
 

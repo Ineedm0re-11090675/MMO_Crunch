@@ -3,6 +3,9 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "CAbilitySystemStatics.h"
+
+// Codex: Use the native MapleCombat damage execution for the migrated Ground Blast path.
+#include "AbilitySystem/Effects/CombatEffect_Damage.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "TargetActor_GroundPick.h"
 #include "Abilities/Tasks/AbilityTask_WaitTargetData.h"
@@ -55,7 +58,9 @@ void UGA_GroundBlast::TargetConfirmed(const FGameplayAbilityTargetDataHandle& Da
 	
 	if (K2_HasAuthority())
 	{
-		BP_ApplyGameplayEffectToTarget(Data,GroundBlastDamage.DamageEffect,GetAbilityLevel(CurrentSpecHandle,CurrentActorInfo));
+		// Codex: The former -1 Health GE maps to 1 positive MapleCombat damage point.
+		ApplyMapleCombatDamageToTargetData(Data, UCombatEffect_Damage::StaticClass(),
+			GroundBlastDamage.DamageAmount, GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
 		PushTargets(Data,GroundBlastDamage.PushVelocity);
 	}
 	FGameplayCueParameters Parameters;

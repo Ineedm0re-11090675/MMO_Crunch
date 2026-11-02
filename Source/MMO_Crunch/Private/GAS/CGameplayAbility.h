@@ -31,11 +31,23 @@ protected:
 	void StopMontageAfterCurrentSection(UAnimMontage* MontageToStop);
 	ACharacter* GetAvatarCharacter();
 	void  ApplyGameplayEffectToHitResultActor(const FHitResult& HitResult,TSubclassOf<UGameplayEffect> GameplayEffect,int Level = 1);
+	// Codex: Resolve migrated damage sources to the Maple ASC even when the ability spec still lives on the legacy ASC.
+	UAbilitySystemComponent* GetMapleCombatSourceASC() const;
+	// Codex: Route migrated Crunch damage through MapleCombat SetByCaller instead of legacy Health modifiers.
+	void ApplyMapleCombatDamageToTargetData(const FGameplayAbilityTargetDataHandle& TargetDataHandle,
+		TSubclassOf<UGameplayEffect> DamageEffect, float DamageAmount, int32 Level = 1);
+	// Codex: Preserve hit context while applying a MapleCombat damage effect to a single hit actor.
+	void ApplyMapleCombatDamageToHitResultActor(const FHitResult& HitResult,
+		TSubclassOf<UGameplayEffect> DamageEffect, float DamageAmount, int32 Level = 1);
 
 	FGenericTeamId GetOwnerTeamId() const;
 	bool IsActorTeamAttitudeIs(const AActor* OtherActor,ETeamAttitude::Type TargetTeam) const;
 	void SendLocalGameplayEvent(const FGameplayTag& Tag,const FGameplayEventData& Data);
 private: 
+	// Codex: Share ASC resolution and spec application between migrated target-data and hit-result paths.
+	void ApplyMapleCombatDamageToActor(AActor* TargetActor, TSubclassOf<UGameplayEffect> DamageEffect,
+		float DamageAmount, int32 Level, const FHitResult* ContextHitResult);
+
 	UPROPERTY(EditDefaultsOnly,Category = "Debug")
 	bool bShowDebugSphere = false;
 

@@ -20,16 +20,19 @@ public:
 private:
 	void SetupWaitInputPress();
 
-	UPROPERTY(EditDefaultsOnly,Category = "Gameplay Effect")
-	TSubclassOf<UGameplayEffect> DefaultDamageEffect;
+	// Codex: Preserve the old MMC's source AttackDamage input; MapleCombat applies target-side defense.
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Effect", meta = (ClampMin = "0.0"))
+	float DefaultDamageMultiplier = 1.0f;
+	// Codex: All four legacy combo GEs use the same MMC, so each section defaults to a 1.0 multiplier.
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay Effect")
+	TMap<FName, float> DamageMultipliersMap;
 	
 	UPROPERTY(EditDefaultsOnly,Category = "Animation")
 	UAnimMontage* ComboMontage;
 
-	UPROPERTY(EditDefaultsOnly,Category = "Gameplay Effect")
-	TMap<FName,TSubclassOf<UGameplayEffect>> DamageEffectsMap;
-
-	TSubclassOf<UGameplayEffect> GetCurrentComboDamageEffect() const;
+	// Codex: Read source AttackDamage from MapleGAS and scale it for the active montage section.
+	float GetCurrentComboDamageAmount() const;
+	float GetCurrentComboDamageMultiplier() const;
 	
 	UFUNCTION()
 	void ComboEventChangedReceived(FGameplayEventData Data);

@@ -22,6 +22,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	TSubclassOf<UGameplayEffect> DamageEffect;
+	// Codex: Supply the magnitude expected by MapleCombat's Combat.Data.Damage SetByCaller execution.
+	UPROPERTY(EditDefaultsOnly, Category = "Effects", meta = (ClampMin = "0.0"))
+	float DamageAmount = 100.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	TSubclassOf<UGameplayEffect> DashEffect;

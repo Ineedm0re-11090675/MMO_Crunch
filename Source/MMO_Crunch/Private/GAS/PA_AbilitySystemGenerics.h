@@ -12,20 +12,12 @@ class UPA_AbilitySystemGenerics: public UDataAsset
 {
 	GENERATED_BODY()
 public:
-	FORCEINLINE TSubclassOf<UGameplayEffect> GetDeathEffect() const{ return DeathEffect; }
-	FORCEINLINE TSubclassOf<UGameplayEffect> GetFullStatsEffect() const{ return FullStatsEffect; }
 	FORCEINLINE const TArray<TSubclassOf<UGameplayEffect>>& GetInitialEffect() const{ return InitialEffect; }
 	FORCEINLINE const TArray<TSubclassOf<UGameplayAbility>>&  GetPassiveAbility() const{ return PassiveAbility; }
 	FORCEINLINE const UDataTable* GetBaseStatsDataTable() const{ return BaseStatsDataTable; }
 	const FRealCurve* GetExpCurve() const ;
 private:
-	UPROPERTY(EditDefaultsOnly,Category = "Gameplay Effects")
-	TSubclassOf<UGameplayEffect> DeathEffect;
-
-	UPROPERTY(EditDefaultsOnly,Category = "Gameplay Effects")
-	TSubclassOf<UGameplayEffect> FullStatsEffect;
-
-	
+	// Codex: Legacy DeathEffect and FullStatsEffect were retired with same-Pawn death/respawn; GameMode respawns a fresh Pawn.
 	UPROPERTY(EditDefaultsOnly,Category = "Gameplay Effects")
 	TArray<TSubclassOf<UGameplayEffect>> InitialEffect;
 

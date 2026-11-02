@@ -20,6 +20,8 @@ void UCCharacterAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 	DOREPLIFETIME_CONDITION_NOTIFY(UCCharacterAttributeSet, StrengthGrowRate, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UCCharacterAttributeSet, IntelligenceGrowRate, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UCCharacterAttributeSet, Armor, COND_None, REPNOTIFY_Always);
+	// Codex: Replicate the migrated attack power used by MapleCombat combo damage.
+	DOREPLIFETIME_CONDITION_NOTIFY(UCCharacterAttributeSet, AttackDamage, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UCCharacterAttributeSet, MoveSpeed, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UCCharacterAttributeSet, MoveAcceleration, COND_None, REPNOTIFY_Always);
 }
@@ -88,6 +90,12 @@ void UCCharacterAttributeSet::OnRep_IntelligenceGrowRate(const FGameplayAttribut
 void UCCharacterAttributeSet::OnRep_Armor(const FGameplayAttributeData& OldValue)
 {
 	LAZY_GAMEPLAYATTRIBUTE_REPNOTIFY(UCCharacterAttributeSet, Armor, OldValue);
+}
+
+// Codex: Use MapleGAS's lazy-safe RepNotify path for migrated attack power.
+void UCCharacterAttributeSet::OnRep_AttackDamage(const FGameplayAttributeData& OldValue)
+{
+	LAZY_GAMEPLAYATTRIBUTE_REPNOTIFY(UCCharacterAttributeSet, AttackDamage, OldValue);
 }
 
 void UCCharacterAttributeSet::OnRep_MoveSpeed(const FGameplayAttributeData& OldValue)

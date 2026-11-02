@@ -2,7 +2,9 @@
 
 FGenericDamageEffectDef::FGenericDamageEffectDef()
 	:DamageEffect{nullptr},
-	PushVelocity{0.f}
+	PushVelocity{0.f},
+	// Codex: Existing Crunch damage GEs use a -1 Health modifier; preserve that as 1 positive MapleCombat damage point.
+	DamageAmount{1.0f}
 { 
 }
 

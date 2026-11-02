@@ -23,8 +23,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Targeting")
 	TSubclassOf<class ATargetActor_GroundPick> GroundPickTargetActorClass;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Effect")
-	TSubclassOf<UGameplayEffect> DamageEffect;
+	// Codex: The current Blink blueprint has no damage GE, so preserve its no-damage default until configured.
+	UPROPERTY(EditDefaultsOnly, Category = "Effect", meta = (ClampMin = "0.0"))
+	float DamageAmount = 0.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	float BlinkLandTargetPushSpeed = 5000.f;

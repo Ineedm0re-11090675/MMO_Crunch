@@ -2,12 +2,17 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystemGlobals.h"
+#include "AbilitySystem/MapleCombatAttributeSet.h"
+#include "Character/CCharacter.h"
 #include "CAbilitySystemStatics.h"
 #include "GAP_Launched.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
+// Codex: Apply the migrated damage contract to MapleCombat targets.
+#include "MapleCombatTags.h"
 
 UCGameplayAbility::UCGameplayAbility()
 {
@@ -226,6 +231,17 @@ ACharacter* UCGameplayAbility::GetAvatarCharacter()
 	return AvatarCharacter;
 }
 
+// Codex: Use Maple ASC as the damage source while Crunch abilities are still granted by the legacy ASC.
+UAbilitySystemComponent* UCGameplayAbility::GetMapleCombatSourceASC() const
+{
+	if (const ACCharacter* CrunchCharacter = Cast<ACCharacter>(GetAvatarActorFromActorInfo()))
+	{
+		return CrunchCharacter->GetMapleAbilitySystemComponent();
+	}
+
+	return GetAbilitySystemComponentFromActorInfo();
+}
+
 void UCGameplayAbility::ApplyGameplayEffectToHitResultActor(const FHitResult& HitResult,
 	TSubclassOf<UGameplayEffect> GameplayEffect, int Level)
 {
@@ -242,6 +258,88 @@ void UCGameplayAbility::ApplyGameplayEffectToHitResultActor(const FHitResult& Hi
 		UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(HitResult.GetActor())
 		);
 		
+}
+
+// Codex: Apply one MapleCombat damage spec to each actor in target data, resolving Crunch characters to their Maple ASC.
+void UCGameplayAbility::ApplyMapleCombatDamageToTargetData(
+	const FGameplayAbilityTargetDataHandle& TargetDataHandle,
+	TSubclassOf<UGameplayEffect> DamageEffect,
+	const float DamageAmount,
+	const int32 Level)
+{
+	if (!DamageEffect || DamageAmount <= 0.0f)
+	{
+		return;
+	}
+
+	for (int32 TargetDataIndex = 0; TargetDataIndex < TargetDataHandle.Num(); ++TargetDataIndex)
+	{
+		const FGameplayAbilityTargetData* TargetData = TargetDataHandle.Get(TargetDataIndex);
+		const FHitResult* HitResult = TargetData ? TargetData->GetHitResult() : nullptr;
+		const TArray<AActor*> TargetActors = UAbilitySystemBlueprintLibrary::GetActorsFromTargetData(
+			TargetDataHandle, TargetDataIndex);
+		for (AActor* TargetActor : TargetActors)
+		{
+			const FHitResult* TargetHitResult = HitResult && HitResult->GetActor() == TargetActor ? HitResult : nullptr;
+			ApplyMapleCombatDamageToActor(TargetActor, DamageEffect, DamageAmount, Level, TargetHitResult);
+		}
+	}
+}
+
+// Codex: Keep the originating hit in the effect context for MapleCombat damage outcomes and cosmetics.
+void UCGameplayAbility::ApplyMapleCombatDamageToHitResultActor(
+	const FHitResult& HitResult,
+	TSubclassOf<UGameplayEffect> DamageEffect,
+	const float DamageAmount,
+	const int32 Level)
+{
+	ApplyMapleCombatDamageToActor(HitResult.GetActor(), DamageEffect, DamageAmount, Level, &HitResult);
+}
+
+// Codex: Use the target's Maple ASC for Crunch characters whose legacy interface still returns the old ASC.
+void UCGameplayAbility::ApplyMapleCombatDamageToActor(
+	AActor* TargetActor,
+	TSubclassOf<UGameplayEffect> DamageEffect,
+	const float DamageAmount,
+	const int32 Level,
+	const FHitResult* ContextHitResult)
+{
+	UAbilitySystemComponent* SourceASC = GetMapleCombatSourceASC();
+	// Codex: MapleCombat damage is server-authoritative even when an ability also predicts local hit reactions.
+	if (!K2_HasAuthority() || !IsValid(SourceASC) || !IsValid(TargetActor) || !DamageEffect || DamageAmount <= 0.0f)
+	{
+		return;
+	}
+
+	UAbilitySystemComponent* TargetASC = nullptr;
+	if (ACCharacter* CrunchCharacter = Cast<ACCharacter>(TargetActor))
+	{
+		TargetASC = CrunchCharacter->GetMapleAbilitySystemComponent();
+	}
+	else
+	{
+		TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(TargetActor);
+	}
+
+	if (!IsValid(TargetASC) || !TargetASC->GetSet<UMapleCombatAttributeSet>())
+	{
+		return;
+	}
+
+	FGameplayEffectContextHandle EffectContext = SourceASC->MakeEffectContext();
+	if (ContextHitResult)
+	{
+		EffectContext.AddHitResult(*ContextHitResult, true);
+	}
+
+	FGameplayEffectSpecHandle DamageSpecHandle = SourceASC->MakeOutgoingSpec(DamageEffect, Level, EffectContext);
+	if (!DamageSpecHandle.IsValid())
+	{
+		return;
+	}
+
+	DamageSpecHandle.Data->SetSetByCallerMagnitude(Tag_Combat_Data_Damage, DamageAmount);
+	SourceASC->ApplyGameplayEffectSpecToTarget(*DamageSpecHandle.Data.Get(), TargetASC);
 }
 
 bool UCGameplayAbility::IsActorTeamAttitudeIs(const AActor* OtherActor, ETeamAttitude::Type TargetTeam) const

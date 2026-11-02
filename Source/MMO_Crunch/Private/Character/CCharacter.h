@@ -1,13 +1,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
 #include "GameplayTagContainer.h"
-#include "GAS/CGameplayAbility.h"
 #include "GAS/CGameplayAbilityTypes.h"
 #include "GenericTeamAgentInterface.h"
 #include "GameFramework/MapleGASCharacter.h"
+#include "Interfaces/CombatSystemInterface.h"
 #include "Widget/RenderActorTargetInterface.h"
 #include "CCharacter.generated.h"
 
@@ -18,10 +17,15 @@
 
 // 前置声明 Character 成长组件。
 class UCharacterProgressionComponent;
+// Codex: Keep Crunch-specific attribute threshold tags out of the legacy ASC.
+class UCharacterStateComponent;
 
 
 UCLASS()
-class ACCharacter : public AMapleGASCharacter, public IGenericTeamAgentInterface,public IRenderActorTargetInterface
+class ACCharacter : public AMapleGASCharacter,
+					public ICombatSystemInterface,
+					public IGenericTeamAgentInterface,
+					public IRenderActorTargetInterface
 {
 	GENERATED_BODY()
 protected:
@@ -57,12 +61,13 @@ private:
 protected:
 	UPROPERTY(VisibleDefaultsOnly,Category = "Gameplay Effects")
 	class UCAbilitySystemComponent* CAbilitySystemComponent;
+	
+	
 	UPROPERTY()
 	class UCAttributeSet* CAttributeSet;
 	/*
 	 *UI
 	*/
-	void UpgradeAbilityWithInputID(ECAbilityInputId InputID);
 private:
 	UPROPERTY(VisibleDefaultsOnly,Category = "UI")
 	class UWidgetComponent* OverHeadWidget;
@@ -93,22 +98,8 @@ public:
 private:
 	FTransform MeshRelativeTransform;
 	
-	UPROPERTY(EditDefaultsOnly,Category= "Death")
-	UAnimMontage* DeathMontage;
-
-	UPROPERTY(EditDefaultsOnly,Category= "Death")
-	float DeathMontageFinishTimeShift = -0.8f;
-	FTimerHandle DeathMontageTimer;
-
-	void DeathMontageFinished();
-	void PlayDeathMontage();
-	void SetRagDollEnabled(bool bEnable);
-
-	void SetStatsGaugeEnabled(bool bEnabled);
-	
 	void BindGASChangedDelegate();
 	
-	void HandleDeathTagChanged(const FGameplayTag Tag,int32 NewCount);
 	void HandleStunTagChanged(const FGameplayTag Tag,int32 NewCount);
 	void HandleAimingTagChanged(const FGameplayTag Tag,int32 NewCount);
 	void HandleFocusTagChanged(const FGameplayTag Tag,int32 NewCount);
@@ -116,12 +107,7 @@ private:
 	void SetIsAiming(bool bIsAiming);
 	virtual void OnAimChange(bool bIsAiming);
 	
-	void StartDeathSequence();
-	void Respawn();
-
-	// for playCharacter
-	virtual void OnDeath();
-	virtual void OnRespawn();
+	// Codex: MapleCombat and UCharacterStateComponent own death presentation and respawn lifecycle.
 
 	/*
 	 *Stun
@@ -150,7 +136,6 @@ private:
 	 */
 private:
 
-	void SetAIPerceptionStimulusSourceEnable(bool bEnable);
 	UPROPERTY()
 	class UAIPerceptionStimuliSourceComponent* PerceptionStimuliSourceComponent;
 
@@ -170,6 +155,10 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components",
 		meta=(AllowPrivateAccess="true"))
 	TObjectPtr<UCharacterProgressionComponent> CharacterProgressionComponent;
+	// Codex: Own Health/Mana threshold state while the legacy attributes are being migrated.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components",
+		meta=(AllowPrivateAccess="true"))
+	TObjectPtr<UCharacterStateComponent> CharacterStateComponent;
 public:
 	//UI/输入请求升级；具体规则交给组件，实际 spec 修改交给 ASC。
 	UFUNCTION(BlueprintCallable, Category="Crunch|Progression")

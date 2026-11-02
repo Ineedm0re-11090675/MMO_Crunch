@@ -1,15 +1,24 @@
 #include "GA_Combo.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "CAbilitySystemStatics.h"
+#include "AbilitySystem/Effects/CombatEffect_Damage.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputPress.h"
 #include "GameplayTagsManager.h"
+// Codex: Read the migrated MapleGAS attack power used by the old combo magnitude calculation.
+#include "Reactor/GAS/CCharacterAttributeSet.h"
 UGA_Combo::UGA_Combo()
 {
 	AbilityTags.AddTag(UCAbilitySystemStatics::GetBasicAttackAbilityTag());
 	BlockAbilitiesWithTag.AddTag(UCAbilitySystemStatics::GetBasicAttackAbilityTag());
+	// Codex: Preserve the old MMC's identical per-section scale while replacing legacy attribute captures.
+	DamageMultipliersMap.Add(TEXT("Combo01"), 1.0f);
+	DamageMultipliersMap.Add(TEXT("Combo02"), 1.0f);
+	DamageMultipliersMap.Add(TEXT("Combo03"), 1.0f);
+	DamageMultipliersMap.Add(TEXT("Combo04"), 1.0f);
 }
 
 void UGA_Combo::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -94,8 +103,9 @@ void UGA_Combo::HandleTargetGroupReceive(FGameplayEventData Data)
 	for (int i = 0; i < HitTargetCount; i++)
 	{
 		FHitResult HitResult = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(Data.TargetData, i);
-		TSubclassOf<UGameplayEffect> GameplayEffect = GetCurrentComboDamageEffect();
-		ApplyGameplayEffectToHitResultActor(HitResult,GameplayEffect,GetAbilityLevel(CurrentSpecHandle,CurrentActorInfo));
+		// Codex: Send source AttackDamage as SetByCaller; MapleCombat Defense Data owns target-side reduction.
+		ApplyMapleCombatDamageToHitResultActor(HitResult, UCombatEffect_Damage::StaticClass(),
+			GetCurrentComboDamageAmount(), GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
 	}
 }
 
@@ -114,19 +124,31 @@ void UGA_Combo::TryCommitCombo()
 	
 }
 
-TSubclassOf<UGameplayEffect> UGA_Combo::GetCurrentComboDamageEffect() const
+float UGA_Combo::GetCurrentComboDamageAmount() const
+{
+	const UAbilitySystemComponent* SourceASC = GetMapleCombatSourceASC();
+	if (!IsValid(SourceASC) || !SourceASC->GetSet<UCCharacterAttributeSet>())
+	{
+		return 0.0f;
+	}
+
+	return SourceASC->GetNumericAttribute(UCCharacterAttributeSet::GetAttackDamageAttribute()) *
+		GetCurrentComboDamageMultiplier();
+}
+
+// Codex: The original four combo GEs use the same MMC_BaseAttackDamage calculation and section multiplier.
+float UGA_Combo::GetCurrentComboDamageMultiplier() const
 {
 	UAnimInstance* OwningAnimInstance = GetOwnerAnimInstance();
 	if (OwningAnimInstance)
 	{
 		FName CurrentSectionName = OwningAnimInstance->Montage_GetCurrentSection(ComboMontage);
-		const TSubclassOf<UGameplayEffect>* FoundGameplayEffect = DamageEffectsMap.Find(CurrentSectionName);
-		if (FoundGameplayEffect)
+		if (const float* FoundDamageMultiplier = DamageMultipliersMap.Find(CurrentSectionName))
 		{
-			return *FoundGameplayEffect;
+			return *FoundDamageMultiplier;
 		}
 	}
-	return DefaultDamageEffect;
+	return DefaultDamageMultiplier;
 }
 
 void UGA_Combo::ComboEventChangedReceived(FGameplayEventData Data)

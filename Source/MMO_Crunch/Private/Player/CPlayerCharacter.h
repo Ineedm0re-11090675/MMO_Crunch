@@ -65,11 +65,6 @@ private:
 	
 	void SetInputEnableFromPlayerController(bool bEnable);
 	/*
-	 *Death && Respawn
-	 */
-	virtual void OnDeath() override;
-	virtual void OnRespawn() override;
-	/*
 	 *Stun
 	 */
 	void OnStun() override;

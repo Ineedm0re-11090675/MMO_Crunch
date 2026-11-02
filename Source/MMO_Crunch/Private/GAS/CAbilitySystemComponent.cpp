@@ -1,6 +1,5 @@
 #include "CAbilitySystemComponent.h"
 
-#include "AbilitySystemBlueprintLibrary.h"
 #include "CAbilitySystemStatics.h"
 #include "CHeroAttributeSet.h"
 #include "GameplayEffectExtension.h"
@@ -10,8 +9,7 @@
 
 UCAbilitySystemComponent::UCAbilitySystemComponent()
 {
-	GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetHealthAttribute()).AddUObject(this, &UCAbilitySystemComponent::UpdateHealth);
-	GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetManaAttribute()).AddUObject(this, &UCAbilitySystemComponent::UpdateMana);
+	// Codex: Health/Mana state delegates now belong to UCharacterStateComponent.
 	GetGameplayAttributeValueChangeDelegate(UCHeroAttributeSet::GetExperienceAttribute()).AddUObject(this, &UCAbilitySystemComponent::UpdateExperience);
 	GenericCancelInputID = (int32)ECAbilityInputId::Cancel;
 	GenericConfirmInputID = (int32)ECAbilityInputId::Confirm;
@@ -108,12 +106,6 @@ void UCAbilitySystemComponent::GiveInitialAbility()
 	}
 }
 
-void UCAbilitySystemComponent::ApplyFullStatsEffect()
-{
-	if (!AbilitySystemGenerics) return;
-	AuthApplyGameplayEffect(AbilitySystemGenerics->GetFullStatsEffect());
-}
-
 bool UCAbilitySystemComponent::bIsMaxLevel() const
 {
 	bool bFound;
@@ -155,82 +147,6 @@ void UCAbilitySystemComponent::Client_AbilitySpecLevelUpdated_Implementation(FGa
 const TMap<ECAbilityInputId, TSubclassOf<UGameplayAbility>>& UCAbilitySystemComponent::GetAbility() const
 {
 	return GameplayAbilities;
-}
-
-void UCAbilitySystemComponent::AuthApplyGameplayEffect(TSubclassOf<UGameplayEffect> GameplayEffect, int Level)
-{
-	if (GetOwner() && GetOwner()->HasAuthority())
-	{
-		FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingSpec(GameplayEffect ,Level , MakeEffectContext());
-		ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
-	}
-}
-
-void UCAbilitySystemComponent::UpdateHealth(const FOnAttributeChangeData& ChangedData)
-{
-	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
-
-	bool bFound =false;
-	float MaxHealth = GetGameplayAttributeValue(UCAttributeSet::GetMaxHealthAttribute(),bFound);
-	if (bFound && ChangedData.NewValue >= MaxHealth)
-	{
-		 if (!HasMatchingGameplayTag(UCAbilitySystemStatics::GetFullHealthStatsAbilityTag()))
-		 {
-			 AddLooseGameplayTag(UCAbilitySystemStatics::GetFullHealthStatsAbilityTag());
-		 }
-	}else
-	{
-		RemoveLooseGameplayTag(UCAbilitySystemStatics::GetFullHealthStatsAbilityTag());
-	}
-	if (ChangedData.NewValue <= 0 )
-	{
-		if (!HasMatchingGameplayTag(UCAbilitySystemStatics::GetEmptyHealthStatsAbilityTag()))
-		{
-			AddLooseGameplayTag(UCAbilitySystemStatics::GetEmptyHealthStatsAbilityTag());
-			
-			if (AbilitySystemGenerics && AbilitySystemGenerics->GetDeathEffect())
-			{
-				AuthApplyGameplayEffect(AbilitySystemGenerics->GetDeathEffect());
-			}
-			FGameplayEventData DeadAbilityEventData;
-			//可以从Health变化的Data里读取有效信息
-			if (ChangedData.GEModData)
-				DeadAbilityEventData.ContextHandle = ChangedData.GEModData->EffectSpec.GetContext();
-			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),UCAbilitySystemStatics::GetDeathStatsAbilityTag(),DeadAbilityEventData);
- 		}
-	}else
-	{
-		RemoveLooseGameplayTag(UCAbilitySystemStatics::GetEmptyHealthStatsAbilityTag());
-	}
-}
-
-void UCAbilitySystemComponent::UpdateMana(const FOnAttributeChangeData& ChangedData)
-{
-	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
-
-	bool bFound =false;
-	float MaxMana = GetGameplayAttributeValue(UCAttributeSet::GetMaxManaAttribute(),bFound);
-	if (bFound && ChangedData.NewValue >= MaxMana)
-	{
-		if (!HasMatchingGameplayTag(UCAbilitySystemStatics::GetFullManaStatsAbilityTag()))
-		{
-			AddLooseGameplayTag(UCAbilitySystemStatics::GetFullManaStatsAbilityTag());
-		}
-	}else
-	{
-		RemoveLooseGameplayTag(UCAbilitySystemStatics::GetFullManaStatsAbilityTag());
-	}
-	if (ChangedData.NewValue <= 0 )
-	{
-	
-		if (!HasMatchingGameplayTag(UCAbilitySystemStatics::GetEmptyManaStatsAbilityTag()))
-		{
-			AddLooseGameplayTag(UCAbilitySystemStatics::GetEmptyManaStatsAbilityTag());
-		}
-	}else
-	{
-		RemoveLooseGameplayTag(UCAbilitySystemStatics::GetEmptyManaStatsAbilityTag());
-	}
 }
 
 void UCAbilitySystemComponent::UpdateExperience(const FOnAttributeChangeData& ChangedData)

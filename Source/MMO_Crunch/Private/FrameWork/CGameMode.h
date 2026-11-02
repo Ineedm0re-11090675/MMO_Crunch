@@ -5,6 +5,9 @@
 #include "GenericTeamAgentInterface.h"
 #include "CGameMode.generated.h"
 
+// Codex: Forward declare the controller type used by the respawn entry point.
+class APlayerController;
+
 UCLASS()
 class  ACGameMode : public AGameModeBase
 {
@@ -13,11 +16,16 @@ public:
 	virtual APlayerController* SpawnPlayerController(ENetRole InRemoteRole, const FString& Options) override;	
 	
 	virtual void StartPlay() override;
+	// Codex: Centralize player respawn after MapleCombat finishes its death flow.
+	bool RequestPlayerRespawn(APlayerController* PlayerController);
 	
 	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
 
 	virtual APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot) override;
 private:
+	// Codex: Defer RestartPlayer until MapleCombat has finished its current death callback stack.
+	void RestartPlayerAfterDeath(TWeakObjectPtr<APlayerController> PlayerController);
+
 	FGenericTeamId GetTeamIDForPlayer(const AController* PC) const;
 
 	AActor* FindNextStartSpotForTeam(const FGenericTeamId& TeamId);

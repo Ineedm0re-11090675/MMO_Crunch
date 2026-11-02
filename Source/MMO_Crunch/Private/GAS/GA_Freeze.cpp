@@ -2,6 +2,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystem/Effects/CombatEffect_Damage.h"
 #include "CAbilitySystemStatics.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitTargetData.h"
@@ -53,7 +54,9 @@ void UGA_Freeze::TargetReceived(const FGameplayAbilityTargetDataHandle& TargetDa
 	}
 	if (K2_HasAuthority())
 	{
-		BP_ApplyGameplayEffectToTarget(TargetDataHandle,DamageEffect,GetAbilityLevel(CurrentSpecHandle,CurrentActorInfo));
+		// Codex: Route configured Freeze damage through MapleCombat; zero preserves the current empty-GE behavior.
+		ApplyMapleCombatDamageToTargetData(TargetDataHandle, UCombatEffect_Damage::StaticClass(), DamageAmount,
+			GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
 	}
 
 	FGameplayCueParameters FreezeCueParameters;

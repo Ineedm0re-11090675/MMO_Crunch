@@ -23,11 +23,15 @@ struct FGenericDamageEffectDef
 	GENERATED_BODY()
 public:
 	FGenericDamageEffectDef();
+	// Codex: Keep the serialized legacy GE reference during migration; migrated Crunch damage uses UCombatEffect_Damage.
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UGameplayEffect> DamageEffect;
 
 	UPROPERTY(EditAnywhere)
 	FVector PushVelocity;
+	// Codex: Store positive MapleCombat damage separately from legacy GE negative Health modifiers.
+	UPROPERTY(EditAnywhere, meta = (ClampMin = "0.0"))
+	float DamageAmount = 1.0f;
 };
 
 USTRUCT(BlueprintType)

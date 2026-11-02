@@ -1,5 +1,6 @@
 #include "GA_Blink.h"
 #include "CAbilitySystemStatics.h"
+#include "AbilitySystem/Effects/CombatEffect_Damage.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitTargetData.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
@@ -87,7 +88,9 @@ void UGA_Blink::Teleport(FGameplayEventData Payload)
 		FVector PickedTeleportLocation = PickedLocationHitResult.ImpactPoint;
 
 		GetAvatarActorFromActorInfo()->SetActorLocation(PickedTeleportLocation);
-		BP_ApplyGameplayEffectToTarget(BlinkTargetDataHandle, DamageEffect, GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
+		// Codex: Route configured Blink damage through MapleCombat; zero preserves the current empty-GE behavior.
+		ApplyMapleCombatDamageToTargetData(BlinkTargetDataHandle, UCombatEffect_Damage::StaticClass(), DamageAmount,
+			GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
 		PushTargetsFromOwnerLocation(BlinkTargetDataHandle, BlinkLandTargetPushSpeed);
 	}
 }

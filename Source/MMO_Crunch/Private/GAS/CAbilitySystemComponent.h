@@ -13,8 +13,6 @@ public:
 	UCAbilitySystemComponent();
 	void ServerSideInit();
 	void InitializeBaseAttributes();
-	void ApplyFullStatsEffect();
-
 	bool bIsMaxLevel() const ;
 
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -28,10 +26,7 @@ private:
 	void ApplyInitialEffects();
 	void GiveInitialAbility();
 	
-	void AuthApplyGameplayEffect(TSubclassOf<UGameplayEffect> GameplayEffect,int Level = 1);
-	
-	void UpdateHealth(const FOnAttributeChangeData& ChangedData);
-	void UpdateMana(const FOnAttributeChangeData& ChangedData);
+	// Codex: Health/Mana threshold tags are now maintained by UCharacterStateComponent.
 	void UpdateExperience(const FOnAttributeChangeData& ChangedData);
 	
 

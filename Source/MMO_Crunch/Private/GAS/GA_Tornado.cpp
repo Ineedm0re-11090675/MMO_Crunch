@@ -1,6 +1,7 @@
 #include "GA_Tornado.h"
 
 #include "CAbilitySystemStatics.h"
+#include "AbilitySystem/Effects/CombatEffect_Damage.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitCancel.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
@@ -45,7 +46,9 @@ void UGA_Tornado::TornadoDamageEventReceived(FGameplayEventData Payload)
 	if (K2_HasAuthority())
 	{
 		FGameplayAbilityTargetDataHandle TargetDataHandle = Payload.TargetData;
-		BP_ApplyGameplayEffectToTarget(TargetDataHandle,HitDamageEffect,GetAbilityLevel(CurrentSpecHandle,CurrentActorInfo));
+		// Codex: Route future Tornado damage through MapleCombat; zero keeps the current empty-GE behavior.
+		ApplyMapleCombatDamageToTargetData(TargetDataHandle, UCombatEffect_Damage::StaticClass(), HitDamageAmount,
+			GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
 		PushTargetsFromOwnerLocation(TargetDataHandle,HitPushSpeed);
 	}
 }

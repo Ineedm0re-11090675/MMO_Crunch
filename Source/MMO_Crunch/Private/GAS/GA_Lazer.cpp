@@ -2,6 +2,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "CAttributeSet.h"
+#include "AbilitySystem/Effects/CombatEffect_Damage.h"
 #include "TargetActor_Line.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
@@ -94,7 +95,9 @@ void UGA_Lazer::TargetReceived(const FGameplayAbilityTargetDataHandle& TargetDat
 {
 	if (K2_HasAuthority())
 	{
-		BP_ApplyGameplayEffectToTarget(TargetData,HitDamageEffect,GetAbilityLevel(CurrentSpecHandle,CurrentActorInfo));
+		// Codex: Route the legacy -10 Health Lazer hit through MapleCombat damage and defense resolution.
+		ApplyMapleCombatDamageToTargetData(TargetData, UCombatEffect_Damage::StaticClass(), HitDamageAmount,
+			GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
 	}
 	PushTargets(TargetData,GetAvatarActorFromActorInfo()->GetActorForwardVector() * HitPushSpeed);
 }

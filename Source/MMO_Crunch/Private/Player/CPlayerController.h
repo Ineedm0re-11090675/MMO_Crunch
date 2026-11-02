@@ -23,6 +23,11 @@ public:
 	virtual void SetupInputComponent() override;
 
 	void MatchFinished(AActor* ViewTarget, int WinningTeam);
+#if WITH_EDITOR
+	// Codex: Editor-only PIE harness for exercising MapleCombat's native damage execution on the possessed character.
+	UFUNCTION(Exec)
+	void DebugMapleCombatDamage(float DamageAmount);
+#endif
 private:
 	UFUNCTION(Client, Reliable)
 	void Client_MatchFinished(AActor* ViewTarget, int WinningTeam);

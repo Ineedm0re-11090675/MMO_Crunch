@@ -5,6 +5,8 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "CAbilitySystemStatics.h"
+// Codex: Use MapleCombat's damage execution for migrated Uppercut hit effects.
+#include "AbilitySystem/Effects/CombatEffect_Damage.h"
 
 UUpperCut::UUpperCut()
 {
@@ -60,8 +62,9 @@ void UUpperCut::StartLaunching(FGameplayEventData EventData)
 		{
 			FHitResult HitResult = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(EventData.TargetData, i);
 			PushTarget(HitResult.GetActor(), FVector::UpVector * UppercutLaunchSpeed);
-			ApplyGameplayEffectToHitResultActor(HitResult, LaunchDamageEffect,
-			                                    GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
+			// Codex: Replace the old negative Health modifier with positive MapleCombat SetByCaller damage.
+			ApplyMapleCombatDamageToHitResultActor(HitResult, UCombatEffect_Damage::StaticClass(),
+				LaunchDamageAmount, GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
 		}
 	}
 
@@ -126,8 +129,9 @@ void UUpperCut::HandleComboDamageEvent(FGameplayEventData Data)
 		FVector ForceVelocity = GetAvatarActorFromActorInfo()->GetActorTransform().TransformVector(
 			DamageDef->PushVelocity);
 		PushTarget(HitResult.GetActor(), ForceVelocity);
-		ApplyGameplayEffectToHitResultActor(HitResult, DamageDef->DamageEffect,
-		                                    GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
+		// Codex: Uppercut combo GE magnitudes are -1 Health; the new data field carries the equivalent positive value.
+		ApplyMapleCombatDamageToHitResultActor(HitResult, UCombatEffect_Damage::StaticClass(),
+			DamageDef->DamageAmount, GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
 	}
 }
 

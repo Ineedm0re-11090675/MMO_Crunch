@@ -29,8 +29,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Targeting")
 	TSubclassOf<class ATargetActor_GroundPick> TargetActorClass;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Effect")
-	TSubclassOf<UGameplayEffect> DamageEffect;
+	// Codex: The current Freeze blueprint has no damage GE, so preserve its no-damage default until configured.
+	UPROPERTY(EditDefaultsOnly, Category = "Effect", meta = (ClampMin = "0.0"))
+	float DamageAmount = 0.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "GameplayCue")
 	FGameplayTag FreezingTargetGameplayCueTag;

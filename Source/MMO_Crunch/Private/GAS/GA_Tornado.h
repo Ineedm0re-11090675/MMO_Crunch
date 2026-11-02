@@ -11,8 +11,9 @@ class UGA_Tornado : public UCGameplayAbility
 public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 private:
-	UPROPERTY(EditDefaultsOnly, Category = "Effect")
-	TSubclassOf<UGameplayEffect> HitDamageEffect;
+	// Codex: The current Tornado blueprint has no damage GE, so preserve its no-damage default until configured.
+	UPROPERTY(EditDefaultsOnly, Category = "Effect", meta = (ClampMin = "0.0"))
+	float HitDamageAmount = 0.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	float HitPushSpeed = 3000.f;

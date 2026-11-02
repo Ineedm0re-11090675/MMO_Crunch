@@ -1,5 +1,6 @@
 #include "GA_Dash.h"
 
+// Codex: Dash damage now uses the shared MapleCombat target application path.
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
@@ -89,7 +90,10 @@ void UGA_Dash::TargetReceive(const FGameplayAbilityTargetDataHandle& TargetDataH
 {
 	if (K2_HasAuthority())
 	{
-		BP_ApplyGameplayEffectToTarget(TargetDataHandle,DamageEffect,GetAbilityLevel(CurrentSpecHandle,CurrentActorInfo));
+		// Codex: Pass the former 100-point Health loss through MapleCombat's Combat.Data.Damage SetByCaller.
+		ApplyMapleCombatDamageToTargetData(TargetDataHandle, DamageEffect, DamageAmount,
+			GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
+
 		PushTargetsFromOwnerLocation(TargetDataHandle,TargetHitPushSpeed);
 	}
 }

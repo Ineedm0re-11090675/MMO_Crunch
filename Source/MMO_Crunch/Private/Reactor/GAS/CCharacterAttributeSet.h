@@ -23,6 +23,8 @@ public:
 	ATTRIBUTE_ACCESSORS(UCCharacterAttributeSet, StrengthGrowRate)
 	ATTRIBUTE_ACCESSORS(UCCharacterAttributeSet, IntelligenceGrowRate)
 	ATTRIBUTE_ACCESSORS(UCCharacterAttributeSet, Armor)
+	// Codex: Carry legacy base AttackDamage into MapleGAS for MapleCombat SetByCaller damage.
+	ATTRIBUTE_ACCESSORS(UCCharacterAttributeSet, AttackDamage)
 	ATTRIBUTE_ACCESSORS(UCCharacterAttributeSet, MoveSpeed)
 	ATTRIBUTE_ACCESSORS(UCCharacterAttributeSet, MoveAcceleration)
 
@@ -63,6 +65,10 @@ private:
 	// Codex: These remain Crunch-owned stats; MapleCombat ArmorReduction has different semantics.
 	UPROPERTY(BlueprintReadOnly, Category = "Crunch|Stats",meta = (AllowPrivateAccess = "true"),ReplicatedUsing = OnRep_Armor)
 	FGameplayAttributeData Armor;
+
+	// Codex: Replace UCAttributeSet.AttackDamage as the source value for Crunch combo damage.
+	UPROPERTY(BlueprintReadOnly, Category = "Crunch|Stats", meta = (AllowPrivateAccess = "true"), ReplicatedUsing = OnRep_AttackDamage)
+	FGameplayAttributeData AttackDamage;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Crunch|Movement", meta = (AllowPrivateAccess = "true"),ReplicatedUsing = OnRep_MoveSpeed)
 	FGameplayAttributeData MoveSpeed;
@@ -117,6 +123,9 @@ private:
 
 	UFUNCTION()
 	void OnRep_Armor(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	void OnRep_AttackDamage(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
 	void OnRep_MoveSpeed(const FGameplayAttributeData& OldValue);

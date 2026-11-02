@@ -27,6 +27,9 @@ private:
 		
 	UPROPERTY(EditDefaultsOnly,Category = "Effect")
 	TSubclassOf<UGameplayEffect> HitDamageEffect;
+	// Codex: Preserve the old -10 Health hit as a positive MapleCombat SetByCaller amount.
+	UPROPERTY(EditDefaultsOnly, Category = "Effect", meta = (ClampMin = "0.0"))
+	float HitDamageAmount = 10.0f;
 		
 	UPROPERTY(EditDefaultsOnly,Category = "Effect")
 	float HitPushSpeed = 3000;

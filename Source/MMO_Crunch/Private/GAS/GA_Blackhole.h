@@ -56,6 +56,9 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category="Effect")
 	TSubclassOf<UGameplayEffect> FinalBlowDamageEffect;
+	// Codex: Preserve the old -130 Health final blow as a positive MapleCombat damage amount.
+	UPROPERTY(EditDefaultsOnly, Category="Effect", meta = (ClampMin = "0.0"))
+	float FinalBlowDamageAmount = 130.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category="Effect")
 	float BlowPushSpeed = 1000.f;

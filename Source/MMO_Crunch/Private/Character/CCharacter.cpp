@@ -14,19 +14,27 @@
 #include "Perception/AISense_Sight.h"
 #include "Widget/OverHeadStatsGauge.h"
 #include "Reactor/Comp/CharacterProgressionComponent.h"
+// Codex: Character-owned state component now handles legacy Health/Mana threshold tags.
+#include "Reactor/Comp/CharacterStateComponent.h"
+// Codex: Read the MapleCombat dead-state tag for legacy character queries during the ASC migration.
+#include "MapleCombatTags.h"
 
 
 
 void ACCharacter::BeginPlay()
 {
-	// MapleGAS 已在 Super::BeginPlay 内完成默认初始化后，再初始化成长规则。
+	// Codex: Bind before inherited Maple GAS startup effects can trigger a death flow.
+	if (CharacterStateComponent)
+	{
+		CharacterStateComponent->InitializeMapleCombatLifecycle();
+	}
 	Super::BeginPlay();
 
 	if (HasAuthority() && CharacterProgressionComponent)
 	{
 		CharacterProgressionComponent->InitializeFromASC(GetMapleAbilitySystemComponent());
 	}
-	Super::BeginPlay();
+	// Codex: The previous duplicate Super::BeginPlay call was removed; continue actor setup once.
 	ConfigureOverHeadStatsWidget();
 	MeshRelativeTransform =  GetMesh()->GetRelativeTransform();
 
@@ -48,6 +56,8 @@ ACCharacter::ACCharacter()
 	// 在 ACCharacter 上创建 Character 成长组件。
 	CharacterProgressionComponent =
 		CreateDefaultSubobject<UCharacterProgressionComponent>(TEXT("Character Progression Component"));
+	// Codex: Extract legacy Health/Mana state updates from UCAbilitySystemComponent.
+	CharacterStateComponent = CreateDefaultSubobject<UCharacterStateComponent>(TEXT("Character State Component"));
 
 	
 
@@ -69,13 +79,23 @@ ACCharacter::ACCharacter()
 
 void ACCharacter::ServerSideInit()
 {
-	 CAbilitySystemComponent->InitAbilityActorInfo(this,this);
-	 CAbilitySystemComponent->ServerSideInit();
+	CAbilitySystemComponent->InitAbilityActorInfo(this,this);
+	// Codex: Bind before startup effects so the state component observes initial Health/Mana changes.
+	if (CharacterStateComponent)
+	{
+		CharacterStateComponent->InitializeFromLegacyAbilitySystem(CAbilitySystemComponent);
+	}
+	CAbilitySystemComponent->ServerSideInit();
 }
 
 void ACCharacter::ClientSideInit()
 {
 	CAbilitySystemComponent->InitAbilityActorInfo(this,this);
+	// Codex: Bind the client-side legacy ASC for attribute replication callbacks.
+	if (CharacterStateComponent)
+	{
+		CharacterStateComponent->InitializeFromLegacyAbilitySystem(CAbilitySystemComponent);
+	}
 }
 
 bool ACCharacter::IsLocallyControlledByPlayer() const
@@ -127,67 +147,6 @@ FRotator ACCharacter::GetCaptureLocalRotation() const
 	return HeadshotLocalCaptureRotation;
 } 
 
-void ACCharacter::DeathMontageFinished()
-{
-	if (IsDead())
-	{
-		SetRagDollEnabled(true);
-	}else
-	{
-		
-	}
-}
-
-void ACCharacter::PlayDeathMontage()
-{
-	if (DeathMontage)
-	{
-		float MontageDuration = PlayAnimMontage(DeathMontage);
-		GetWorldTimerManager().SetTimer(DeathMontageTimer,this,&ACCharacter::DeathMontageFinished,MontageDuration +DeathMontageFinishTimeShift);
-	}
-}
-
-void ACCharacter::SetRagDollEnabled(bool bEnable)
-{
-	if (bEnable)
-	{
-		GetMesh()->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
-		GetMesh()->SetSimulatePhysics(true);
-		GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-	}else
-	{
-		GetMesh()->SetSimulatePhysics(false);
-		GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		GetMesh()->AttachToComponent(GetRootComponent(),FAttachmentTransformRules::KeepRelativeTransform);
-		GetMesh()->SetRelativeTransform(MeshRelativeTransform);
-	}
-}
-
-void ACCharacter::SetStatsGaugeEnabled(bool bEnabled)
-{
-	GetWorldTimerManager().ClearTimer(OverHeadStatsGaugeUpdateTimer);
-	if (bEnabled)
-	{
-		ConfigureOverHeadStatsWidget();
-	}else
-	{
-		OverHeadWidget->SetHiddenInGame(true);
-	}
-}
-
-
-
-void ACCharacter::HandleDeathTagChanged(const FGameplayTag Tag, int32 NewCount)
-{
-	if (NewCount != 0)
-	{
-		StartDeathSequence();
-	}else
-	{
-		Respawn();
-	}
-}
-
 void ACCharacter::HandleStunTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
 	if (IsDead()) return;
@@ -233,58 +192,6 @@ void ACCharacter::OnStun()
 void ACCharacter::OnRecoveryFromStun()
 {
 }
-void ACCharacter::StartDeathSequence()
-{
-	OnDeath();
-
-	if (CAbilitySystemComponent)
-	{
-		CAbilitySystemComponent->CancelAllAbilities( );
-	}
-	PlayDeathMontage();
-	SetStatsGaugeEnabled(false);
-
-	//GetCharacterMovement()->SetMovementMode(MOVE_None);
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	SetAIPerceptionStimulusSourceEnable(false);
-}
-
-void ACCharacter::Respawn()
-{
-	OnRespawn();
-
-
-	SetRagDollEnabled(false);
-	//GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	GetMesh()->GetAnimInstance()->StopAllMontages(0.f);
-	SetStatsGaugeEnabled(true);
-	SetAIPerceptionStimulusSourceEnable(true);
-
-	if (HasAuthority() && GetController())
-	{
-		TWeakObjectPtr<AActor> StartSpot =GetController()->StartSpot;
-		if (StartSpot.IsValid())
-		{
-			SetActorTransform(StartSpot->GetActorTransform());
-		}
-	}
-
-	if (CAbilitySystemComponent)
-	{
-		CAbilitySystemComponent->ApplyFullStatsEffect();
-	}
-}
-
-
-void ACCharacter::UpgradeAbilityWithInputID(ECAbilityInputId InputID)
-{
-	if (CAbilitySystemComponent)
-	{
-		CAbilitySystemComponent->Server_UpgradeAbilityWithID(InputID);
-	}
-}
-
 void ACCharacter::ConfigureOverHeadStatsWidget()
 {
 	if (OverHeadWidget == nullptr)return;
@@ -313,19 +220,7 @@ void ACCharacter::UpdateOverHeadStatsGauge()
 	}
 }
 
-bool ACCharacter::IsDead() const
-{
-	return CAbilitySystemComponent->HasMatchingGameplayTag(UCAbilitySystemStatics::GetDeathStatsAbilityTag());
-}
 
-void ACCharacter::SpawnImmediately()
-{
-	if (HasAuthority())
-	{
-		CAbilitySystemComponent->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(UCAbilitySystemStatics::GetDeathStatsAbilityTag()));
-		
-	}
-}
 
 bool ACCharacter::Server_SendGameplayEventToSelf_Validate(const FGameplayTag& GameplayTag,
 	const FGameplayEventData& GameplayEventData)
@@ -339,14 +234,29 @@ void ACCharacter::Server_SendGameplayEventToSelf_Implementation(const FGameplayT
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this,GameplayTag,GameplayEventData);
 }
 
-void ACCharacter::OnDeath()
+bool ACCharacter::IsDead() const
 {
+	// Codex: Keep legacy consumers aware of MapleCombat deaths while the old ASC still owns other state tags.
+	if (IsValid(CAbilitySystemComponent) &&
+		CAbilitySystemComponent->HasMatchingGameplayTag(UCAbilitySystemStatics::GetDeathStatsAbilityTag()))
+	{
+		return true;
+	}
+
+	const UAbilitySystemComponent* MapleAbilitySystemComponent = GetMapleAbilitySystemComponent();
+	return IsValid(MapleAbilitySystemComponent) && MapleAbilitySystemComponent->HasMatchingGameplayTag(Tag_Combat_State_Dead);
 }
 
-void ACCharacter::OnRespawn()
+void ACCharacter::SpawnImmediately()
 {
+	if (HasAuthority())
+	{
+		// Codex: Clear the legacy death tag mirrored by CharacterStateComponent when pooled Minions are reused.
+		CAbilitySystemComponent->RemoveReplicatedLooseGameplayTag(UCAbilitySystemStatics::GetDeathStatsAbilityTag());
+		CAbilitySystemComponent->RemoveLooseGameplayTag(UCAbilitySystemStatics::GetDeathStatsAbilityTag());
+		CAbilitySystemComponent->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(UCAbilitySystemStatics::GetDeathStatsAbilityTag()));
+	}
 }
-
 
 void ACCharacter::SetGenericTeamId(const FGenericTeamId& NewTeamID)
 {
@@ -363,36 +273,10 @@ void ACCharacter::OnRep_TeamID()
 	//Override On Child
 }
 
-void ACCharacter::SetAIPerceptionStimulusSourceEnable(bool bEnable)
-{
-	if (!PerceptionStimuliSourceComponent) return;
-
-	if (bEnable)
-	{
-		PerceptionStimuliSourceComponent->RegisterWithPerceptionSystem();
-	}else
-	{
-		/*
-		*Character 活着 
-		↓ 
-		StimuliSource 已注册 
-		↓ 
-		AI 看到了它 
-		↓ 
-		PerceptionComponent 内部已经保存了一份 FAIStimulus
-
-		死亡后 Unregister的意义是 不再作为刺激源，但是之前的刺激信息还在，所以需要在AIC里把刺激信息做过期处理
-		*/
-		PerceptionStimuliSourceComponent->UnregisterFromPerceptionSystem();
-	}
-	
-}
-
 void ACCharacter::BindGASChangedDelegate()
 {
 	if (CAbilitySystemComponent)
 	{
-		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetDeathStatsAbilityTag()).AddUObject(this,&ACCharacter::HandleDeathTagChanged);
 		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetStunStatsAbilityTag()).AddUObject(this,&ACCharacter::HandleStunTagChanged);
 		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetAimingStatsAbilityTag()).AddUObject(this,&ACCharacter::HandleAimingTagChanged);
 		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetFocusTag()).AddUObject(this,&ACCharacter::HandleFocusTagChanged);
