@@ -2,11 +2,13 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/MapleCombatManagerComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GAS/CAbilitySystemComponent.h"
 #include "GAS/CAbilitySystemStatics.h"
 #include "GAS/CAttributeSet.h"
+#include "AbilitySystem/MapleGASAbilitySystemComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "MMO_Crunch/MMO_Crunch.h"
 #include "Net/UnrealNetwork.h"
@@ -29,6 +31,15 @@ void ACCharacter::BeginPlay()
 		CharacterStateComponent->InitializeMapleCombatLifecycle();
 	}
 	Super::BeginPlay();
+	// Codex: MapleCombat binds through IAbilitySystemInterface, which still resolves to the legacy ASC on ACCharacter.
+	// Rebind the manager to the explicit Maple ASC after component BeginPlay has performed its default binding.
+	if (UMapleCombatManagerComponent* CombatManager = FindComponentByClass<UMapleCombatManagerComponent>())
+	{
+		if (UAbilitySystemComponent* MapleASC = GetMapleAbilitySystemComponent())
+		{
+			CombatManager->SetAbilitySystemComponent(MapleASC);
+		}
+	}
 
 	if (HasAuthority() && CharacterProgressionComponent)
 	{
@@ -128,8 +139,8 @@ UAbilitySystemComponent* ACCharacter::GetAbilitySystemComponent() const
 
 UAbilitySystemComponent* ACCharacter::GetMapleAbilitySystemComponent() const
 {
-	// Codex: Call the base implementation directly so this migration accessor does not resolve back to the legacy override.
-	return AMapleGASCharacter::GetAbilitySystemComponent();
+	// Codex: The Maple base class may clear its cached pointer after the mixed legacy interface lookup; resolve the Maple component by class.
+	return FindComponentByClass<UMapleGASAbilitySystemComponent>();
 }
 
 const TMap<ECAbilityInputId, TSubclassOf<UGameplayAbility>>& ACCharacter::GetAbility() const

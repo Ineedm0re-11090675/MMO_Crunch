@@ -148,7 +148,21 @@ void UCGameplayAbility::PushTarget(AActor* Target, const FVector& PushForce)
 	TargetData->HitResult = HitResult;
 	EventData.TargetData.Add(TargetData);
 
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Target,UGAP_Launched::GetLaunchedAbilityActivationTag(),EventData);
+	// Codex: ACCharacter's generic AbilitySystemInterface still returns the legacy ASC; send launch events to Maple ASC explicitly.
+	UAbilitySystemComponent* TargetASC = nullptr;
+	if (const ACCharacter* CrunchTarget = Cast<ACCharacter>(Target))
+	{
+		TargetASC = CrunchTarget->GetMapleAbilitySystemComponent();
+	}
+	else
+	{
+		TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Target);
+	}
+
+	if (IsValid(TargetASC))
+	{
+		TargetASC->HandleGameplayEvent(UGAP_Launched::GetLaunchedAbilityActivationTag(), &EventData);
+	}
 }
 
 void UCGameplayAbility::PushTargets(const TArray<AActor*> Actors, const FVector& PushForce)
