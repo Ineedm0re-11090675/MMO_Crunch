@@ -2,8 +2,21 @@
 
 #include "CoreMinimal.h"
 #include "CGameplayAbility.h"
-#include "CGameplayAbilityTypes.h"
 #include "UpperCut.generated.h"
+
+// Codex: Scope combo hit data to UpperCut now that the shared legacy GE definition is unused elsewhere.
+USTRUCT(BlueprintType)
+struct FUpperCutComboDamageData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	FVector PushVelocity = FVector::ZeroVector;
+
+	// Codex: Store positive MapleCombat damage independently from the removed legacy Health GE.
+	UPROPERTY(EditAnywhere, meta = (ClampMin = "0.0"))
+	float DamageAmount = 1.0f;
+};
 
 UCLASS()
 class UUpperCut : public UCGameplayAbility
@@ -14,7 +27,7 @@ public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 private:
 	UPROPERTY(EditDefaultsOnly,Category = "Combo")
-	TMap<FName,FGenericDamageEffectDef>DamageMap;
+	TMap<FName,FUpperCutComboDamageData> DamageMap;
 
 	
 	UPROPERTY(EditDefaultsOnly,Category = "Animation")
@@ -47,5 +60,5 @@ private:
 	
 	FName NextComboName;
 
-	const FGenericDamageEffectDef* GetDamageDefFromCurrentCombo() const ;
+	const FUpperCutComboDamageData* GetDamageDefFromCurrentCombo() const;
 };

@@ -17,21 +17,7 @@ enum class ECAbilityInputId :uint8
 	Confirm UMETA(DisplayName = "Confirm"),
 	Cancel UMETA(DisplayName = "Cancel")
 };
-USTRUCT(BlueprintType)
-struct FGenericDamageEffectDef
-{
-	GENERATED_BODY()
-public:
-	// Codex: Keep the serialized struct type for Blueprint compatibility; damage now uses the positive Maple magnitude and push data below.
-	FGenericDamageEffectDef();
-
-	UPROPERTY(EditAnywhere)
-	FVector PushVelocity;
-	// Codex: Store positive MapleCombat damage separately from legacy GE negative Health modifiers.
-	UPROPERTY(EditAnywhere, meta = (ClampMin = "0.0"))
-	float DamageAmount = 1.0f;
-};
-
+// Codex: Remove the unused shared legacy damage struct; UpperCut now owns its remaining combo hit data.
 USTRUCT(BlueprintType)
 struct FHeroBaseStats :public FTableRowBase
 {

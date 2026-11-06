@@ -1,12 +1,5 @@
 #include "CGameplayAbilityTypes.h"
 
-FGenericDamageEffectDef::FGenericDamageEffectDef()
-	:PushVelocity{0.f},
-	// Codex: Existing Crunch damage GEs use a -1 Health modifier; preserve that as 1 positive MapleCombat damage point.
-	DamageAmount{1.0f}
-{ 
-}
-
 FHeroBaseStats::FHeroBaseStats()
 	: Class{nullptr},
 	  Strength{0.f},

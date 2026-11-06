@@ -124,7 +124,7 @@ void UUpperCut::HandleComboDamageEvent(FGameplayEventData Data)
 
 	//先自推
 	PushTarget(GetAvatarActorFromActorInfo(), FVector::UpVector * UppercutComboHoldSpeed);
-	const FGenericDamageEffectDef* DamageDef = GetDamageDefFromCurrentCombo();
+	const FUpperCutComboDamageData* DamageDef = GetDamageDefFromCurrentCombo();
 	if (!DamageDef) return;
 	int HitTargetCount = UAbilitySystemBlueprintLibrary::GetDataCountFromTargetData(Data.TargetData);
 	for (int i = 0; i < HitTargetCount; i++)
@@ -133,19 +133,19 @@ void UUpperCut::HandleComboDamageEvent(FGameplayEventData Data)
 		FVector ForceVelocity = GetAvatarActorFromActorInfo()->GetActorTransform().TransformVector(
 			DamageDef->PushVelocity);
 		PushTarget(HitResult.GetActor(), ForceVelocity);
-		// Codex: Uppercut combo GE magnitudes are -1 Health; the new data field carries the equivalent positive value.
+		// Codex: Apply the per-section positive damage magnitude through MapleCombat.
 		ApplyMapleCombatDamageToHitResultActor(HitResult, UCombatEffect_Damage::StaticClass(),
 			DamageDef->DamageAmount, GetAbilityLevel(CurrentSpecHandle, CurrentActorInfo));
 	}
 }
 
-const FGenericDamageEffectDef* UUpperCut::GetDamageDefFromCurrentCombo() const
+const FUpperCutComboDamageData* UUpperCut::GetDamageDefFromCurrentCombo() const
 {
 	UAnimInstance* OwningAnimInstance = GetOwnerAnimInstance();
 	if (OwningAnimInstance)
 	{
 		FName CurrentCombo = OwningAnimInstance->Montage_GetCurrentSection(UpperCutMontage);
-		const FGenericDamageEffectDef* EffectDef = DamageMap.Find(CurrentCombo);
+		const FUpperCutComboDamageData* EffectDef = DamageMap.Find(CurrentCombo);
 		return EffectDef;
 	}
 	return nullptr;

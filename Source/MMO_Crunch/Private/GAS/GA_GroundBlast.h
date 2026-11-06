@@ -55,7 +55,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category="Debug")
 	bool bShowDebugSphere = false;
 
-	// Codex: Keep Maple damage magnitude separate from the legacy GE reference used by FGenericDamageEffectDef.
+	// Codex: Keep Maple damage magnitude separate from the removed legacy damage GE reference.
 	UPROPERTY(EditDefaultsOnly, Category="Damage")
 	float GroundBlastDamageAmount = 1.0f;
 
