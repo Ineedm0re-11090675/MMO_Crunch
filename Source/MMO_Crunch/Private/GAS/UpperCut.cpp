@@ -116,10 +116,14 @@ void UUpperCut::HandleComboCommitEvent(FGameplayEventData Data)
 
 void UUpperCut::HandleComboDamageEvent(FGameplayEventData Data)
 {
-	if (K2_HasAuthority())
+	// Codex: Keep combo launch and damage on authority; the prior unbraced condition only guarded the self-launch.
+	if (!K2_HasAuthority())
+	{
+		return;
+	}
 
-		//先自推
-		PushTarget(GetAvatarActorFromActorInfo(), FVector::UpVector * UppercutComboHoldSpeed);
+	//先自推
+	PushTarget(GetAvatarActorFromActorInfo(), FVector::UpVector * UppercutComboHoldSpeed);
 	const FGenericDamageEffectDef* DamageDef = GetDamageDefFromCurrentCombo();
 	if (!DamageDef) return;
 	int HitTargetCount = UAbilitySystemBlueprintLibrary::GetDataCountFromTargetData(Data.TargetData);
