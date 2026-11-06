@@ -262,10 +262,11 @@ void ACCharacter::SpawnImmediately()
 {
 	if (HasAuthority())
 	{
-		// Codex: Clear the legacy death tag mirrored by CharacterStateComponent when pooled Minions are reused.
-		CAbilitySystemComponent->RemoveReplicatedLooseGameplayTag(UCAbilitySystemStatics::GetDeathStatsAbilityTag());
-		CAbilitySystemComponent->RemoveLooseGameplayTag(UCAbilitySystemStatics::GetDeathStatsAbilityTag());
-		CAbilitySystemComponent->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(UCAbilitySystemStatics::GetDeathStatsAbilityTag()));
+		// Codex: Reset both legacy loose-tag channels idempotently; removing an absent replicated tag logs an ASC error.
+		const FGameplayTag LegacyDeathTag = UCAbilitySystemStatics::GetDeathStatsAbilityTag();
+		CAbilitySystemComponent->SetReplicatedLooseGameplayTagCount(LegacyDeathTag, 0);
+		CAbilitySystemComponent->SetLooseGameplayTagCount(LegacyDeathTag, 0);
+		CAbilitySystemComponent->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(LegacyDeathTag));
 	}
 }
 
