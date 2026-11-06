@@ -20,10 +20,7 @@ private:
 	UPROPERTY(EditDefaultsOnly,Category = "Animation")
 	UAnimMontage* UpperCutMontage;
 
-	// Codex: Retain the serialized legacy GE reference while the Uppercut path uses MapleCombat's native damage GE.
-	UPROPERTY(EditDefaultsOnly,Category = "Launch")
-	TSubclassOf<UGameplayEffect> LaunchDamageEffect;
-	// Codex: Preserve the former -1 Health modifier as 1 positive MapleCombat damage point.
+	// Codex: Keep UpperCut's launch amount independent from the removed legacy GE; MapleCombat owns damage execution.
 	UPROPERTY(EditDefaultsOnly, Category = "Launch", meta = (ClampMin = "0.0"))
 	float LaunchDamageAmount = 1.0f;
 	

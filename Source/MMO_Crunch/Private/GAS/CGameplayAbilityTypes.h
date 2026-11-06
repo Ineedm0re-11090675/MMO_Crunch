@@ -22,10 +22,8 @@ struct FGenericDamageEffectDef
 {
 	GENERATED_BODY()
 public:
+	// Codex: Keep the serialized struct type for Blueprint compatibility; damage now uses the positive Maple magnitude and push data below.
 	FGenericDamageEffectDef();
-	// Codex: Keep the serialized legacy GE reference during migration; migrated Crunch damage uses UCombatEffect_Damage.
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<class UGameplayEffect> DamageEffect;
 
 	UPROPERTY(EditAnywhere)
 	FVector PushVelocity;
