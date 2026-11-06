@@ -91,6 +91,28 @@ void ATA_Blackhole::CancelTargeting()
 	Super::CancelTargeting();
 }
 
+// Codex: Keep the fixed actor-array/center-hit contract in one checked accessor.
+bool ATA_Blackhole::GetCenterHitResult(
+	const FGameplayAbilityTargetDataHandle& TargetDataHandle,
+	FHitResult& OutHitResult)
+{
+	constexpr int32 CenterHitDataIndex = 1;
+	if (TargetDataHandle.Num() <= CenterHitDataIndex)
+	{
+		return false;
+	}
+
+	const FGameplayAbilityTargetData* CenterData = TargetDataHandle.Get(CenterHitDataIndex);
+	const FHitResult* CenterHit = CenterData ? CenterData->GetHitResult() : nullptr;
+	if (!CenterHit)
+	{
+		return false;
+	}
+
+	OutHitResult = *CenterHit;
+	return true;
+}
+
 void ATA_Blackhole::OnRep_BlackholeRangeUpdated()
 {
 	DetectionSphereComp->SetSphereRadius(BlackholeRange);

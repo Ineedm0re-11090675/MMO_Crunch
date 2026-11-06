@@ -1,6 +1,5 @@
 #include "GA_Blackhole.h"
 
-#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "CAbilitySystemStatics.h"
 #include "AbilitySystem/Effects/CombatEffect_Damage.h"
@@ -120,8 +119,14 @@ void UGA_Blackhole::PlacementCancelled(const FGameplayAbilityTargetDataHandle& T
 
 void UGA_Blackhole::FinalTargetsReceived(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
-	// Codex: ATA_Blackhole emits a fixed actor-array then center-hit pair, so the center remains at index 1.
-	FVector BlowCenter = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(TargetDataHandle,1).ImpactPoint;
+	FHitResult CenterHit;
+	if (!ATA_Blackhole::GetCenterHitResult(TargetDataHandle, CenterHit))
+	{
+		// Codex: Ignore cancelled or malformed target data instead of cueing the final blow at world origin.
+		K2_EndAbility();
+		return;
+	}
+	const FVector BlowCenter = CenterHit.ImpactPoint;
 	if (K2_HasAuthority())
 	{
 		// Codex: Route the legacy -130 Health final blow through MapleCombat damage and defense resolution.

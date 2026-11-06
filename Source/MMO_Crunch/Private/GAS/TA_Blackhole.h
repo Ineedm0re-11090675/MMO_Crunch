@@ -24,6 +24,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void ConfirmTargetingAndContinue() override;
 	virtual void CancelTargeting() override;
+	// Codex: Expose the center hit appended after ATA_Blackhole's actor-array target data.
+	static bool GetCenterHitResult(const FGameplayAbilityTargetDataHandle& TargetDataHandle, FHitResult& OutHitResult);
 private:
 	UPROPERTY(ReplicatedUsing= OnRep_BlackholeRangeUpdated)
 	float BlackholeRange;
