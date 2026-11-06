@@ -260,13 +260,10 @@ bool ACCharacter::IsDead() const
 
 void ACCharacter::SpawnImmediately()
 {
-	if (HasAuthority())
+	if (HasAuthority() && CharacterStateComponent)
 	{
-		// Codex: Reset both legacy loose-tag channels idempotently; removing an absent replicated tag logs an ASC error.
-		const FGameplayTag LegacyDeathTag = UCAbilitySystemStatics::GetDeathStatsAbilityTag();
-		CAbilitySystemComponent->SetReplicatedLooseGameplayTagCount(LegacyDeathTag, 0);
-		CAbilitySystemComponent->SetLooseGameplayTagCount(LegacyDeathTag, 0);
-		CAbilitySystemComponent->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(LegacyDeathTag));
+		// Codex: Keep SpawnImmediately as the pool-facing API while CharacterStateComponent owns death-tag cleanup.
+		CharacterStateComponent->ResetLegacyDeathState(CAbilitySystemComponent);
 	}
 }
 

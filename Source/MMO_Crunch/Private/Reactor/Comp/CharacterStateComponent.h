@@ -23,6 +23,8 @@ public:
 	void InitializeFromLegacyAbilitySystem(UCAbilitySystemComponent* InAbilitySystemComponent);
 	// Codex: Bind MapleCombat death callbacks so the component can cache the controller and request GameMode respawn.
 	void InitializeMapleCombatLifecycle();
+	// Codex: Clear the temporary legacy death state when a pooled Crunch character is reused.
+	void ResetLegacyDeathState(UCAbilitySystemComponent* AbilitySystemComponent) const;
 
 protected:
 	//Release delegate bindings when the owning character ends play.

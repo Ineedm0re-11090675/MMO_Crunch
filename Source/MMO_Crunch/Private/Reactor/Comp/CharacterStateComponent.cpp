@@ -73,6 +73,21 @@ void UCharacterStateComponent::InitializeMapleCombatLifecycle()
 	CombatManager->OnOwnerFinishedDying.AddUObject(this, &ThisClass::HandleMapleCombatFinishedDying);
 }
 
+// Codex: Keep pooled-character legacy death-tag cleanup with the other Crunch state lifecycle rules.
+void UCharacterStateComponent::ResetLegacyDeathState(UCAbilitySystemComponent* AbilitySystemComponent) const
+{
+	if (!IsValid(AbilitySystemComponent) || !GetOwner() || !GetOwner()->HasAuthority())
+	{
+		return;
+	}
+
+	const FGameplayTag LegacyDeathTag = UCAbilitySystemStatics::GetDeathStatsAbilityTag();
+	// Codex: Set counts to zero instead of removing possibly absent tags from the minimal replication map.
+	AbilitySystemComponent->SetReplicatedLooseGameplayTagCount(LegacyDeathTag, 0);
+	AbilitySystemComponent->SetLooseGameplayTagCount(LegacyDeathTag, 0);
+	AbilitySystemComponent->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(LegacyDeathTag));
+}
+
 // Codex: Remove delegate bindings to avoid callbacks into a component that is shutting down.
 void UCharacterStateComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
