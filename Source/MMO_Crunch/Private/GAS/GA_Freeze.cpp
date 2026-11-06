@@ -47,6 +47,14 @@ void UGA_Freeze::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const 
 
 void UGA_Freeze::TargetReceived(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
+	FHitResult PlacementHit;
+	if (!ATargetActor_GroundPick::GetPlacementHitResult(TargetDataHandle, PlacementHit))
+	{
+		// Codex: End cleanly when malformed target data has no appended GroundPick placement hit.
+		K2_EndAbility();
+		return;
+	}
+
 	if (!K2_CommitAbility())
 	{
 		K2_EndAbility();
@@ -60,7 +68,8 @@ void UGA_Freeze::TargetReceived(const FGameplayAbilityTargetDataHandle& TargetDa
 	}
 
 	FGameplayCueParameters FreezeCueParameters;
-	FreezeCueParameters.Location = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(TargetDataHandle,1).Location;
+	// Codex: GroundPick writes its selected point to ImpactPoint and appends it after all target actors.
+	FreezeCueParameters.Location = PlacementHit.ImpactPoint;
 	FreezeCueParameters.RawMagnitude = TargetingRadius;
 
 	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(FreezingGameplayCueTag,FreezeCueParameters);

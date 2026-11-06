@@ -86,6 +86,12 @@ void UGA_GroundBlast::ApplyEffectToTargets(FGameplayAbilityTargetDataHandle Targ
 	{
 		return;
 	}
+	FHitResult PlacementHit;
+	if (!ATargetActor_GroundPick::GetPlacementHitResult(TargetDataHandle, PlacementHit))
+	{
+		// Codex: Reject malformed GroundPick data before committing or applying effects.
+		return;
+	}
 
 	// Codex: Mirror MapleCombat's target-acquired commit gate so Crunch push/cues only run after commit succeeds.
 	if (CommitTime == ECombatCastCommitTime::TargetsAcquired && !K2_CommitAbility())
@@ -141,11 +147,6 @@ void UGA_GroundBlast::ApplyEffectToTargets(FGameplayAbilityTargetDataHandle Targ
 
 		PushTargets(TargetDataHandle, GroundBlastPushVelocity);
 	}
-
-	// Codex: The target actor appends the placement hit last; this also handles an empty actor list safely.
-	const int32 PlacementDataIndex = TargetDataHandle.Num() - 1;
-	const FHitResult PlacementHit = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(
-		TargetDataHandle, PlacementDataIndex);
 
 	FGameplayCueParameters CueParameters;
 	CueParameters.Location = PlacementHit.ImpactPoint;

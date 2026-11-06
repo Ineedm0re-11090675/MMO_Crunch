@@ -84,7 +84,14 @@ void UGA_Blink::Teleport(FGameplayEventData Payload)
 {
 	if (K2_HasAuthority())
 	{
-		FHitResult PickedLocationHitResult = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(BlinkTargetDataHandle, 1);
+		FHitResult PickedLocationHitResult;
+		if (!ATargetActor_GroundPick::GetPlacementHitResult(BlinkTargetDataHandle, PickedLocationHitResult))
+		{
+			// Codex: Skip teleport and finish the ability if confirmed GroundPick data lacks its appended placement point.
+			K2_EndAbility();
+			return;
+		}
+
 		FVector PickedTeleportLocation = PickedLocationHitResult.ImpactPoint;
 
 		GetAvatarActorFromActorInfo()->SetActorLocation(PickedTeleportLocation);

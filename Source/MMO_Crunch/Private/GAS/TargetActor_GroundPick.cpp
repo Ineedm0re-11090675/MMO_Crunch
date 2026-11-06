@@ -66,6 +66,27 @@ void ATargetActor_GroundPick::ConfirmTargetingAndContinue()
 	TargetDataReadyDelegate.Broadcast(TargetData);
 }
 
+// Codex: GroundPick packs overlaps into one ActorArray item, then appends the placement hit as the final item.
+bool ATargetActor_GroundPick::GetPlacementHitResult(
+	const FGameplayAbilityTargetDataHandle& TargetDataHandle,
+	FHitResult& OutHitResult)
+{
+	if (TargetDataHandle.Num() == 0)
+	{
+		return false;
+	}
+
+	const FGameplayAbilityTargetData* PlacementData = TargetDataHandle.Get(TargetDataHandle.Num() - 1);
+	const FHitResult* PlacementHit = PlacementData ? PlacementData->GetHitResult() : nullptr;
+	if (!PlacementHit)
+	{
+		return false;
+	}
+
+	OutHitResult = *PlacementHit;
+	return true;
+}
+
 void ATargetActor_GroundPick::SetTargetOption(bool bTargetFriendly, bool bTargetEnemy)
 {
 	bShouldTargetEnemy= bTargetEnemy;

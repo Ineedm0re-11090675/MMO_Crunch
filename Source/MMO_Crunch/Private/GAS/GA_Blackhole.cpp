@@ -56,6 +56,14 @@ void UGA_Blackhole::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 
 void UGA_Blackhole::PlaceBlackhole(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
+	FHitResult PlacementHit;
+	if (!ATargetActor_GroundPick::GetPlacementHitResult(TargetDataHandle, PlacementHit))
+	{
+		// Codex: End cleanly when the GroundPick target data has no appended placement point.
+		K2_EndAbility();
+		return;
+	}
+
 	if(!K2_CommitAbility())
 	{
 		K2_EndAbility();
@@ -100,7 +108,8 @@ void UGA_Blackhole::PlaceBlackhole(const FGameplayAbilityTargetDataHandle& Targe
 	BlackholeTargetingTask->FinishSpawningActor(this,TargetActor);
 	if (TargetActor_Blackhole)
 	{
-		TargetActor_Blackhole->SetActorLocation(UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(TargetDataHandle,1).ImpactPoint);
+		// Codex: Read the GroundPick placement through its named accessor instead of a raw target-data index.
+		TargetActor_Blackhole->SetActorLocation(PlacementHit.ImpactPoint);
 	}	
 }
 
@@ -111,6 +120,7 @@ void UGA_Blackhole::PlacementCancelled(const FGameplayAbilityTargetDataHandle& T
 
 void UGA_Blackhole::FinalTargetsReceived(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
+	// Codex: ATA_Blackhole emits a fixed actor-array then center-hit pair, so the center remains at index 1.
 	FVector BlowCenter = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(TargetDataHandle,1).ImpactPoint;
 	if (K2_HasAuthority())
 	{

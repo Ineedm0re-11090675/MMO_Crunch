@@ -13,6 +13,8 @@ public:
 	void SetTargetAreaRadius(float NewTargetAreaRadius);
 	ATargetActor_GroundPick();
 	virtual void ConfirmTargetingAndContinue() override;
+	// Codex: Expose the appended placement hit separately from the ActorArray target-data item.
+	static bool GetPlacementHitResult(const FGameplayAbilityTargetDataHandle& TargetDataHandle, FHitResult& OutHitResult);
 
 	void SetTargetOption(bool bTargetFriendly,bool bTargetEnemy = true );
 	FORCEINLINE void SetShouldDrawDebug(bool bDrawDebug){ bShouldDrawDebug = bDrawDebug; }
