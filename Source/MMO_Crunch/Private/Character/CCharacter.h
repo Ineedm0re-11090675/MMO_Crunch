@@ -144,8 +144,6 @@ private:
 	*Attribute Update
 	*/
 	void MoveSpeedUpdated(const FOnAttributeChangeData& Data);
-	void MaxHealthUpdated(const FOnAttributeChangeData& Data);
-	void MaxManaUpdated(const FOnAttributeChangeData& Data); 
 	
 private:
 	/*

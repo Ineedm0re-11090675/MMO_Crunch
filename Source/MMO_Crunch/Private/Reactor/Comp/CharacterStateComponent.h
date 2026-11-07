@@ -6,6 +6,7 @@
 #include "CharacterStateComponent.generated.h"
 
 class UCAbilitySystemComponent;
+class UCAttributeSet;
 class APlayerController;
 class UMapleCombatManagerComponent;
 struct FOnAttributeChangeData;
@@ -20,7 +21,9 @@ public:
 	UCharacterStateComponent();
 
 	// Codex: Bind after ActorInfo is initialized and before legacy startup effects are applied.
-	void InitializeFromLegacyAbilitySystem(UCAbilitySystemComponent* InAbilitySystemComponent);
+	void InitializeFromLegacyAbilitySystem(
+		UCAbilitySystemComponent* InAbilitySystemComponent,
+		UCAttributeSet* InAttributeSet);
 	// Codex: Bind MapleCombat death callbacks so the component can cache the controller and request GameMode respawn.
 	void InitializeMapleCombatLifecycle();
 	// Codex: Clear the temporary legacy death state when a pooled Crunch character is reused.
@@ -40,10 +43,15 @@ private:
 
 	//Keep the old ASC as a temporary data source until damage effects migrate to MapleCombat.
 	TWeakObjectPtr<UCAbilitySystemComponent> BoundLegacyAbilitySystemComponent;
+	// Codex: Keep old resource-ratio callbacks bound to their Crunch AttributeSet during migration.
+	TWeakObjectPtr<UCAttributeSet> BoundLegacyAttributeSet;
 
 	//Preserve legacy Health/Mana tags and death-event behavior outside the ASC class.
 	void HandleHealthChanged(const FOnAttributeChangeData& ChangedData);
 	void HandleManaChanged(const FOnAttributeChangeData& ChangedData);
+	// Codex: Rescale current resource values when the old ASC changes their maximum values.
+	void HandleMaxHealthChanged(const FOnAttributeChangeData& ChangedData);
+	void HandleMaxManaChanged(const FOnAttributeChangeData& ChangedData);
 	//Cache the owning player controller before MapleCombat detaches it from the dying Pawn.
 	void HandleMapleCombatStartedDying(AActor* DyingActor);
 	//Route completed MapleCombat deaths through ACGameMode for replacement-Pawn respawn.

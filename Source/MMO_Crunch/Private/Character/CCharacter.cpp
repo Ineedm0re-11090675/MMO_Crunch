@@ -92,7 +92,7 @@ void ACCharacter::ServerSideInit()
 	// Codex: Bind before startup effects so the state component observes initial Health/Mana changes.
 	if (CharacterStateComponent)
 	{
-		CharacterStateComponent->InitializeFromLegacyAbilitySystem(CAbilitySystemComponent);
+		CharacterStateComponent->InitializeFromLegacyAbilitySystem(CAbilitySystemComponent, CAttributeSet);
 	}
 	CAbilitySystemComponent->ServerSideInit();
 }
@@ -103,7 +103,7 @@ void ACCharacter::ClientSideInit()
 	// Codex: Bind the client-side legacy ASC for attribute replication callbacks.
 	if (CharacterStateComponent)
 	{
-		CharacterStateComponent->InitializeFromLegacyAbilitySystem(CAbilitySystemComponent);
+		CharacterStateComponent->InitializeFromLegacyAbilitySystem(CAbilitySystemComponent, CAttributeSet);
 	}
 }
 
@@ -280,10 +280,8 @@ void ACCharacter::BindGASChangedDelegate()
 		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetStunStatsAbilityTag()).AddUObject(this,&ACCharacter::HandleStunTagChanged);
 		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetAimingStatsAbilityTag()).AddUObject(this,&ACCharacter::HandleAimingTagChanged);
 		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetFocusTag()).AddUObject(this,&ACCharacter::HandleFocusTagChanged);
-		
+		// Codex: Keep movement character-specific; CharacterStateComponent now owns MaxHealth/MaxMana rescaling listeners.
 		CAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMoveSpeedAttribute()).AddUObject(this,&ACCharacter::MoveSpeedUpdated);
-		CAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxHealthAttribute()).AddUObject(this,&ACCharacter::MaxHealthUpdated);
-		CAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxManaAttribute()).AddUObject(this,&ACCharacter::MaxManaUpdated);
 	}
 }
 
@@ -292,21 +290,6 @@ void ACCharacter::MoveSpeedUpdated(const FOnAttributeChangeData& Data)
 	GetCharacterMovement()->MaxWalkSpeed = Data.NewValue;
 }
 
-void ACCharacter::MaxHealthUpdated(const FOnAttributeChangeData& Data)
-{
-	if (IsValid(CAttributeSet))
-	{
-		CAttributeSet->RescaleHealth();
-	}
-}
-
-void ACCharacter::MaxManaUpdated(const FOnAttributeChangeData& Data)
-{
-	if (IsValid(CAttributeSet))
-	{
-		CAttributeSet->RescaleMana();
-	}
-}
 // 客户端请求经 Character RPC 到服务器，服务器再委托给成长组件。
 void ACCharacter::RequestAbilityUpgrade(TSubclassOf<UGameplayAbility> AbilityClass)
 {

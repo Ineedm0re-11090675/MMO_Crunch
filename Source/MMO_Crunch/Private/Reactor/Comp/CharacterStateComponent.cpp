@@ -24,9 +24,12 @@ UCharacterStateComponent::UCharacterStateComponent()
 }
 
 // Codex: Attach before ServerSideInit applies effects so no Health/Mana updates are missed.
-void UCharacterStateComponent::InitializeFromLegacyAbilitySystem(UCAbilitySystemComponent* InAbilitySystemComponent)
+void UCharacterStateComponent::InitializeFromLegacyAbilitySystem(
+	UCAbilitySystemComponent* InAbilitySystemComponent,
+	UCAttributeSet* InAttributeSet)
 {
-	if (BoundLegacyAbilitySystemComponent.Get() == InAbilitySystemComponent)
+	if (BoundLegacyAbilitySystemComponent.Get() == InAbilitySystemComponent &&
+		BoundLegacyAttributeSet.Get() == InAttributeSet)
 	{
 		return;
 	}
@@ -35,9 +38,12 @@ void UCharacterStateComponent::InitializeFromLegacyAbilitySystem(UCAbilitySystem
 	{
 		PreviousAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetHealthAttribute()).RemoveAll(this);
 		PreviousAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetManaAttribute()).RemoveAll(this);
+		PreviousAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxHealthAttribute()).RemoveAll(this);
+		PreviousAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxManaAttribute()).RemoveAll(this);
 	}
 
 	BoundLegacyAbilitySystemComponent = InAbilitySystemComponent;
+	BoundLegacyAttributeSet = InAttributeSet;
 	if (!IsValid(InAbilitySystemComponent))
 	{
 		return;
@@ -47,6 +53,11 @@ void UCharacterStateComponent::InitializeFromLegacyAbilitySystem(UCAbilitySystem
 		this, &UCharacterStateComponent::HandleHealthChanged);
 	InAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetManaAttribute()).AddUObject(
 		this, &UCharacterStateComponent::HandleManaChanged);
+	// Codex: Keep max-resource listeners beside the Health/Mana state listeners that use the same legacy ASC.
+	InAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxHealthAttribute()).AddUObject(
+		this, &UCharacterStateComponent::HandleMaxHealthChanged);
+	InAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxManaAttribute()).AddUObject(
+		this, &UCharacterStateComponent::HandleMaxManaChanged);
 }
 
 // Codex: Bind once actor components exist so a fatal startup effect cannot race the death request.
@@ -129,9 +140,12 @@ void UCharacterStateComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetHealthAttribute()).RemoveAll(this);
 		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetManaAttribute()).RemoveAll(this);
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxHealthAttribute()).RemoveAll(this);
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxManaAttribute()).RemoveAll(this);
 	}
 
 	BoundLegacyAbilitySystemComponent.Reset();
+	BoundLegacyAttributeSet.Reset();
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -248,6 +262,26 @@ void UCharacterStateComponent::HandleManaChanged(const FOnAttributeChangeData& C
 		bFoundMaxMana && ChangedData.NewValue >= MaxMana);
 
 	SetLooseTag(AbilitySystemComponent, UCAbilitySystemStatics::GetEmptyManaStatsAbilityTag(), ChangedData.NewValue <= 0.0f);
+}
+
+// Codex: Move legacy MaxHealth rescaling out of ACCharacter and keep it with resource-state callbacks.
+void UCharacterStateComponent::HandleMaxHealthChanged(const FOnAttributeChangeData&)
+{
+	UCAttributeSet* AttributeSet = BoundLegacyAttributeSet.Get();
+	if (IsValid(AttributeSet) && GetOwner() && GetOwner()->HasAuthority())
+	{
+		AttributeSet->RescaleHealth();
+	}
+}
+
+// Codex: Move legacy MaxMana rescaling out of ACCharacter and keep it with resource-state callbacks.
+void UCharacterStateComponent::HandleMaxManaChanged(const FOnAttributeChangeData&)
+{
+	UCAttributeSet* AttributeSet = BoundLegacyAttributeSet.Get();
+	if (IsValid(AttributeSet) && GetOwner() && GetOwner()->HasAuthority())
+	{
+		AttributeSet->RescaleMana();
+	}
 }
 
 // Codex: Keep loose-tag updates idempotent and match the prior ASC behavior.
