@@ -18,8 +18,6 @@
 #include "Reactor/Comp/CharacterProgressionComponent.h"
 // Codex: Character-owned state component now handles legacy Health/Mana threshold tags.
 #include "Reactor/Comp/CharacterStateComponent.h"
-// Codex: Read the MapleCombat dead-state tag for legacy character queries during the ASC migration.
-#include "MapleCombatTags.h"
 
 
 
@@ -247,15 +245,8 @@ void ACCharacter::Server_SendGameplayEventToSelf_Implementation(const FGameplayT
 
 bool ACCharacter::IsDead() const
 {
-	// Codex: Keep legacy consumers aware of MapleCombat deaths while the old ASC still owns other state tags.
-	if (IsValid(CAbilitySystemComponent) &&
-		CAbilitySystemComponent->HasMatchingGameplayTag(UCAbilitySystemStatics::GetDeathStatsAbilityTag()))
-	{
-		return true;
-	}
-
-	const UAbilitySystemComponent* MapleAbilitySystemComponent = GetMapleAbilitySystemComponent();
-	return IsValid(MapleAbilitySystemComponent) && MapleAbilitySystemComponent->HasMatchingGameplayTag(Tag_Combat_State_Dead);
+	// Codex: Preserve the existing character-facing API while the state component owns ASC death-state lookup.
+	return IsValid(CharacterStateComponent) && CharacterStateComponent->IsDead();
 }
 
 void ACCharacter::SpawnImmediately()

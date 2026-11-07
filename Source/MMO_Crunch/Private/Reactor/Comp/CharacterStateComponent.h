@@ -25,6 +25,8 @@ public:
 	void InitializeMapleCombatLifecycle();
 	// Codex: Clear the temporary legacy death state when a pooled Crunch character is reused.
 	void ResetLegacyDeathState(UCAbilitySystemComponent* AbilitySystemComponent) const;
+	// Codex: Own the combined legacy and MapleCombat death-state query for Crunch characters.
+	bool IsDead() const;
 
 protected:
 	//Release delegate bindings when the owning character ends play.

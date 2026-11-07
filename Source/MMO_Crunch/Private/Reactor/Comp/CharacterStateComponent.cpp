@@ -6,6 +6,7 @@
 #include "GAS/CAbilitySystemComponent.h"
 #include "GAS/CAbilitySystemStatics.h"
 #include "GAS/CAttributeSet.h"
+#include "AbilitySystem/MapleGASAbilitySystemComponent.h"
 // Codex: Access ACGameMode and the cached controller when routing completed MapleCombat deaths.
 #include "FrameWork/CGameMode.h"
 #include "Engine/World.h"
@@ -14,6 +15,7 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 // Codex: Resolve the manager that owns MapleCombat's death delegates, not its Damage Manager subcomponent.
 #include "MapleCombatFunctionLibrary.h"
+#include "MapleCombatTags.h"
 #include "Components/MapleCombatManagerComponent.h"
 // Codex: Keep this component passive; ACCharacter initializes it at the correct ASC lifecycle point.
 UCharacterStateComponent::UCharacterStateComponent()
@@ -86,6 +88,29 @@ void UCharacterStateComponent::ResetLegacyDeathState(UCAbilitySystemComponent* A
 	AbilitySystemComponent->SetReplicatedLooseGameplayTagCount(LegacyDeathTag, 0);
 	AbilitySystemComponent->SetLooseGameplayTagCount(LegacyDeathTag, 0);
 	AbilitySystemComponent->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(LegacyDeathTag));
+}
+
+// Codex: Centralize the migration bridge that checks death state on both ASC implementations.
+bool UCharacterStateComponent::IsDead() const
+{
+	const AActor* Owner = GetOwner();
+	if (!IsValid(Owner))
+	{
+		return false;
+	}
+
+	const UCAbilitySystemComponent* LegacyAbilitySystemComponent =
+		Owner->FindComponentByClass<UCAbilitySystemComponent>();
+	if (IsValid(LegacyAbilitySystemComponent) &&
+		LegacyAbilitySystemComponent->HasMatchingGameplayTag(UCAbilitySystemStatics::GetDeathStatsAbilityTag()))
+	{
+		return true;
+	}
+
+	const UMapleGASAbilitySystemComponent* MapleAbilitySystemComponent =
+		Owner->FindComponentByClass<UMapleGASAbilitySystemComponent>();
+	return IsValid(MapleAbilitySystemComponent) &&
+		MapleAbilitySystemComponent->HasMatchingGameplayTag(Tag_Combat_State_Dead);
 }
 
 // Codex: Remove delegate bindings to avoid callbacks into a component that is shutting down.
