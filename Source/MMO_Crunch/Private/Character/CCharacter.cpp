@@ -253,8 +253,8 @@ void ACCharacter::SpawnImmediately()
 {
 	if (HasAuthority() && CharacterStateComponent)
 	{
-		// Codex: Keep SpawnImmediately as the pool-facing API while CharacterStateComponent owns death-tag cleanup.
-		CharacterStateComponent->ResetLegacyDeathState(CAbilitySystemComponent);
+		// Codex: Keep SpawnImmediately as the pool-facing API; the state component resolves its own legacy ASC.
+		CharacterStateComponent->ResetLegacyDeathState();
 	}
 }
 

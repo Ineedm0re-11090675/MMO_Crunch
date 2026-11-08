@@ -87,9 +87,14 @@ void UCharacterStateComponent::InitializeMapleCombatLifecycle()
 }
 
 // Codex: Keep pooled-character legacy death-tag cleanup with the other Crunch state lifecycle rules.
-void UCharacterStateComponent::ResetLegacyDeathState(UCAbilitySystemComponent* AbilitySystemComponent) const
+void UCharacterStateComponent::ResetLegacyDeathState() const
 {
-	if (!IsValid(AbilitySystemComponent) || !GetOwner() || !GetOwner()->HasAuthority())
+	// Codex: Resolve this ASC here so ACCharacter keeps only the pool-facing reset entry point.
+	AActor* Owner = GetOwner();
+	UCAbilitySystemComponent* AbilitySystemComponent = IsValid(Owner)
+		? Owner->FindComponentByClass<UCAbilitySystemComponent>()
+		: nullptr;
+	if (!IsValid(AbilitySystemComponent) || !IsValid(Owner) || !Owner->HasAuthority())
 	{
 		return;
 	}
