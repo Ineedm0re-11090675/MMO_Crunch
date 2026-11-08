@@ -2,7 +2,6 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/MapleCombatManagerComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GAS/CAbilitySystemComponent.h"
@@ -33,15 +32,8 @@ void ACCharacter::BeginPlay()
 	if (CharacterStateComponent)
 	{
 		CharacterStateComponent->InitializeFromLegacyAbilitySystem(CAbilitySystemComponent, CAttributeSet);
-	}
-	// Codex: MapleCombat binds through IAbilitySystemInterface, which still resolves to the legacy ASC on ACCharacter.
-	// Rebind the manager to the explicit Maple ASC after component BeginPlay has performed its default binding.
-	if (UMapleCombatManagerComponent* CombatManager = FindComponentByClass<UMapleCombatManagerComponent>())
-	{
-		if (UAbilitySystemComponent* MapleASC = GetMapleAbilitySystemComponent())
-		{
-			CombatManager->SetAbilitySystemComponent(MapleASC);
-		}
+		// Codex: Rebind after Super::BeginPlay; MapleCombat's default interface lookup still returns the legacy ASC.
+		CharacterStateComponent->BindMapleCombatAbilitySystem();
 	}
 
 	if (HasAuthority() && CharacterProgressionComponent)

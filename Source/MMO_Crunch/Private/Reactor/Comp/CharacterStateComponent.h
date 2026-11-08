@@ -29,6 +29,8 @@ public:
 		UCAttributeSet* InAttributeSet);
 	// Codex: Bind MapleCombat death callbacks so the component can cache the controller and request GameMode respawn.
 	void InitializeMapleCombatLifecycle();
+	// Codex: Rebind MapleCombat after its base BeginPlay lookup so mixed ASC interfaces resolve to Maple ASC.
+	void BindMapleCombatAbilitySystem();
 	// Codex: Let the state component resolve and clear its legacy ASC death state when a pooled character is reused.
 	void ResetLegacyDeathState() const;
 	// Codex: Own the combined legacy and MapleCombat death-state query for Crunch characters.

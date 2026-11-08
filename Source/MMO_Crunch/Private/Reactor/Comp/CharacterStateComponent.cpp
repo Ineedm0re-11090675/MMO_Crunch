@@ -124,6 +124,24 @@ void UCharacterStateComponent::InitializeMapleCombatLifecycle()
 	CombatManager->OnOwnerFinishedDying.AddUObject(this, &ThisClass::HandleMapleCombatFinishedDying);
 }
 
+// Codex: Keep MapleCombat's ASC correction with the state component that owns its death lifecycle bindings.
+void UCharacterStateComponent::BindMapleCombatAbilitySystem()
+{
+	AActor* Owner = GetOwner();
+	if (!IsValid(Owner))
+	{
+		return;
+	}
+
+	UMapleCombatManagerComponent* CombatManager = UMapleCombatFunctionLibrary::GetCombatManagerComponent(Owner);
+	UMapleGASAbilitySystemComponent* MapleAbilitySystemComponent =
+		Owner->FindComponentByClass<UMapleGASAbilitySystemComponent>();
+	if (IsValid(CombatManager) && IsValid(MapleAbilitySystemComponent))
+	{
+		CombatManager->SetAbilitySystemComponent(MapleAbilitySystemComponent);
+	}
+}
+
 // Codex: Keep pooled-character legacy death-tag cleanup with the other Crunch state lifecycle rules.
 void UCharacterStateComponent::ResetLegacyDeathState() const
 {
