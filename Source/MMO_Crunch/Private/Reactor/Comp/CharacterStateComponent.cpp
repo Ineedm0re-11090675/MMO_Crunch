@@ -3,6 +3,8 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GAS/CAbilitySystemComponent.h"
 #include "GAS/CAbilitySystemStatics.h"
 #include "GAS/CAttributeSet.h"
@@ -40,7 +42,13 @@ void UCharacterStateComponent::InitializeFromLegacyAbilitySystem(
 		PreviousAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetManaAttribute()).RemoveAll(this);
 		PreviousAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxHealthAttribute()).RemoveAll(this);
 		PreviousAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxManaAttribute()).RemoveAll(this);
+		PreviousAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMoveSpeedAttribute()).RemoveAll(this);
+		// Codex: Remove state-tag listeners with the same lifecycle as the legacy resource listeners.
+		PreviousAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetStunStatsAbilityTag()).RemoveAll(this);
+		PreviousAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetAimingStatsAbilityTag()).RemoveAll(this);
+		PreviousAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetFocusTag()).RemoveAll(this);
 	}
+	bIsInFocusMode = false;
 
 	BoundLegacyAbilitySystemComponent = InAbilitySystemComponent;
 	BoundLegacyAttributeSet = InAttributeSet;
@@ -58,6 +66,36 @@ void UCharacterStateComponent::InitializeFromLegacyAbilitySystem(
 		this, &UCharacterStateComponent::HandleMaxHealthChanged);
 	InAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxManaAttribute()).AddUObject(
 		this, &UCharacterStateComponent::HandleMaxManaChanged);
+	// Codex: Centralize the remaining Crunch attribute-to-movement subscription beside the resource observers.
+	InAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMoveSpeedAttribute()).AddUObject(
+		this, &ThisClass::HandleMoveSpeedChanged);
+	// Codex: Centralize legacy stun, aiming, and focus subscriptions with the other CharacterState listeners.
+	InAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetStunStatsAbilityTag()).AddUObject(
+		this, &ThisClass::HandleLegacyStateTagChanged);
+	InAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetAimingStatsAbilityTag()).AddUObject(
+		this, &ThisClass::HandleLegacyStateTagChanged);
+	InAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetFocusTag()).AddUObject(
+		this, &ThisClass::HandleLegacyStateTagChanged);
+	// Codex: Catch up replicated tags and speed in case the client initialized after their first ASC updates.
+	if (InAbilitySystemComponent->HasMatchingGameplayTag(UCAbilitySystemStatics::GetStunStatsAbilityTag()))
+	{
+		HandleLegacyStateTagChanged(UCAbilitySystemStatics::GetStunStatsAbilityTag(), 1);
+	}
+	if (InAbilitySystemComponent->HasMatchingGameplayTag(UCAbilitySystemStatics::GetAimingStatsAbilityTag()))
+	{
+		HandleLegacyStateTagChanged(UCAbilitySystemStatics::GetAimingStatsAbilityTag(), 1);
+	}
+	if (InAbilitySystemComponent->HasMatchingGameplayTag(UCAbilitySystemStatics::GetFocusTag()))
+	{
+		HandleLegacyStateTagChanged(UCAbilitySystemStatics::GetFocusTag(), 1);
+	}
+	bool bFoundMoveSpeed = false;
+	const float CurrentMoveSpeed = InAbilitySystemComponent->GetGameplayAttributeValue(
+		UCAttributeSet::GetMoveSpeedAttribute(), bFoundMoveSpeed);
+	if (bFoundMoveSpeed)
+	{
+		ApplyMoveSpeed(CurrentMoveSpeed);
+	}
 }
 
 // Codex: Bind once actor components exist so a fatal startup effect cannot race the death request.
@@ -147,6 +185,11 @@ void UCharacterStateComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetManaAttribute()).RemoveAll(this);
 		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxHealthAttribute()).RemoveAll(this);
 		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMaxManaAttribute()).RemoveAll(this);
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMoveSpeedAttribute()).RemoveAll(this);
+		// Codex: Release all old ASC combat-state observers when the component shuts down.
+		AbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetStunStatsAbilityTag()).RemoveAll(this);
+		AbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetAimingStatsAbilityTag()).RemoveAll(this);
+		AbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetFocusTag()).RemoveAll(this);
 	}
 
 	BoundLegacyAbilitySystemComponent.Reset();
@@ -287,6 +330,35 @@ void UCharacterStateComponent::HandleMaxManaChanged(const FOnAttributeChangeData
 	{
 		AttributeSet->RescaleMana();
 	}
+}
+
+// Codex: Preserve client and server movement updates from the legacy MoveSpeed attribute.
+void UCharacterStateComponent::HandleMoveSpeedChanged(const FOnAttributeChangeData& ChangedData)
+{
+	ApplyMoveSpeed(ChangedData.NewValue);
+}
+
+// Codex: Keep the generic attribute-to-movement mapping in CharacterStateComponent during legacy ASC migration.
+void UCharacterStateComponent::ApplyMoveSpeed(const float NewMoveSpeed) const
+{
+	if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
+	{
+		if (UCharacterMovementComponent* MovementComponent = Character->GetCharacterMovement())
+		{
+			MovementComponent->MaxWalkSpeed = NewMoveSpeed;
+		}
+	}
+}
+
+// Codex: Keep old ASC tag tracking here and relay only the state transition needed by character-specific behavior.
+void UCharacterStateComponent::HandleLegacyStateTagChanged(const FGameplayTag Tag, const int32 NewCount)
+{
+	if (Tag == UCAbilitySystemStatics::GetFocusTag())
+	{
+		bIsInFocusMode = NewCount > 0;
+	}
+
+	OnLegacyStateTagChanged.Broadcast(Tag, NewCount);
 }
 
 // Codex: Keep loose-tag updates idempotent and match the prior ASC behavior.

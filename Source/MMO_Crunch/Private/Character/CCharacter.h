@@ -91,19 +91,21 @@ public:
 
 	void SpawnImmediately();
 
-	FORCEINLINE bool GetIsInFocusMode() const { return bIsInFocusMode; }
+	// Codex: Preserve the character-facing focus query while CharacterStateComponent owns the state.
+	bool GetIsInFocusMode() const;
 	
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_SendGameplayEventToSelf(const FGameplayTag& GameplayTag,const FGameplayEventData& GameplayEventData);
 private:
 	FTransform MeshRelativeTransform;
 	
-	void BindGASChangedDelegate();
+	// Codex: Subscribe character-specific reactions to state transitions relayed by CharacterStateComponent.
+	void BindCharacterStateEvents();
+	// Codex: Route component-owned legacy tag transitions to character-specific reactions.
+	void HandleCharacterStateTagChanged(const FGameplayTag Tag, int32 NewCount);
 	
 	void HandleStunTagChanged(const FGameplayTag Tag,int32 NewCount);
 	void HandleAimingTagChanged(const FGameplayTag Tag,int32 NewCount);
-	void HandleFocusTagChanged(const FGameplayTag Tag,int32 NewCount);
-	bool bIsInFocusMode = false;
 	void SetIsAiming(bool bIsAiming);
 	virtual void OnAimChange(bool bIsAiming);
 	
@@ -140,11 +142,6 @@ private:
 	class UAIPerceptionStimuliSourceComponent* PerceptionStimuliSourceComponent;
 
 
-	/*
-	*Attribute Update
-	*/
-	void MoveSpeedUpdated(const FOnAttributeChangeData& Data);
-	
 private:
 	/*
 	 **************Reactor************

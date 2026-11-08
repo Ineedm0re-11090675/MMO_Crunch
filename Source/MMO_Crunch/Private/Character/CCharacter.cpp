@@ -29,6 +29,11 @@ void ACCharacter::BeginPlay()
 		CharacterStateComponent->InitializeMapleCombatLifecycle();
 	}
 	Super::BeginPlay();
+	// Codex: Bind legacy ASC state on replicated AI copies too; only the server possesses and initializes AI Pawns.
+	if (CharacterStateComponent)
+	{
+		CharacterStateComponent->InitializeFromLegacyAbilitySystem(CAbilitySystemComponent, CAttributeSet);
+	}
 	// Codex: MapleCombat binds through IAbilitySystemInterface, which still resolves to the legacy ASC on ACCharacter.
 	// Rebind the manager to the explicit Maple ASC after component BeginPlay has performed its default binding.
 	if (UMapleCombatManagerComponent* CombatManager = FindComponentByClass<UMapleCombatManagerComponent>())
@@ -81,7 +86,7 @@ ACCharacter::ACCharacter()
 	OverHeadWidget = CreateDefaultSubobject<UWidgetComponent>("Over Head Widget Component");
 	OverHeadWidget->SetupAttachment(GetRootComponent());
 
-	BindGASChangedDelegate();
+	BindCharacterStateEvents();
 
 	PerceptionStimuliSourceComponent = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>("Perception Stimuli Source Component");
 }
@@ -176,12 +181,6 @@ void ACCharacter::HandleAimingTagChanged(const FGameplayTag Tag, int32 NewCount)
 	SetIsAiming(NewCount !=0);
 }
 
-void ACCharacter::HandleFocusTagChanged(const FGameplayTag Tag, int32 NewCount)
-{
-	bIsInFocusMode = NewCount >0;
-	
-}
-
 void ACCharacter::OnAimChange(bool bIsAiming)
 {
 	//Override on child;
@@ -249,6 +248,12 @@ bool ACCharacter::IsDead() const
 	return IsValid(CharacterStateComponent) && CharacterStateComponent->IsDead();
 }
 
+// Codex: Preserve callers while the component owns legacy Focus tag tracking.
+bool ACCharacter::GetIsInFocusMode() const
+{
+	return IsValid(CharacterStateComponent) && CharacterStateComponent->IsInFocusMode();
+}
+
 void ACCharacter::SpawnImmediately()
 {
 	if (HasAuthority() && CharacterStateComponent)
@@ -273,21 +278,27 @@ void ACCharacter::OnRep_TeamID()
 	//Override On Child
 }
 
-void ACCharacter::BindGASChangedDelegate()
+void ACCharacter::BindCharacterStateEvents()
 {
-	if (CAbilitySystemComponent)
+	// Codex: The state component owns all old ASC listeners and relays only character-specific tag behavior.
+	if (CharacterStateComponent)
 	{
-		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetStunStatsAbilityTag()).AddUObject(this,&ACCharacter::HandleStunTagChanged);
-		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetAimingStatsAbilityTag()).AddUObject(this,&ACCharacter::HandleAimingTagChanged);
-		CAbilitySystemComponent->RegisterGameplayTagEvent(UCAbilitySystemStatics::GetFocusTag()).AddUObject(this,&ACCharacter::HandleFocusTagChanged);
-		// Codex: Keep movement character-specific; CharacterStateComponent now owns MaxHealth/MaxMana rescaling listeners.
-		CAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UCAttributeSet::GetMoveSpeedAttribute()).AddUObject(this,&ACCharacter::MoveSpeedUpdated);
+		CharacterStateComponent->OnLegacyStateTagChanged.AddUObject(
+			this, &ACCharacter::HandleCharacterStateTagChanged);
 	}
 }
 
-void ACCharacter::MoveSpeedUpdated(const FOnAttributeChangeData& Data)
+// Codex: Keep animation/input/camera responses in ACCharacter while the state component owns the old ASC subscriptions.
+void ACCharacter::HandleCharacterStateTagChanged(const FGameplayTag Tag, const int32 NewCount)
 {
-	GetCharacterMovement()->MaxWalkSpeed = Data.NewValue;
+	if (Tag == UCAbilitySystemStatics::GetStunStatsAbilityTag())
+	{
+		HandleStunTagChanged(Tag, NewCount);
+	}
+	else if (Tag == UCAbilitySystemStatics::GetAimingStatsAbilityTag())
+	{
+		HandleAimingTagChanged(Tag, NewCount);
+	}
 }
 
 // 客户端请求经 Character RPC 到服务器，服务器再委托给成长组件。
